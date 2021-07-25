@@ -109,6 +109,9 @@ namespace vinnysocks5proxy
                 {
                     try
                     {
+                        if (connection == null)
+                            continue;
+
                         connection.doTerminate = true;
                         connection.Pulse();
                     }

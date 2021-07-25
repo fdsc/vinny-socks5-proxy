@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using static vinnysocks5proxy.Helper;
 using cryptoprime;
 using System.Text;
+using System.Diagnostics;
 
 namespace vinnysocks5proxy
 {
@@ -29,6 +30,7 @@ namespace vinnysocks5proxy
             public const int EC_Address_type_not_supported    = 0x08;
             
             public string connectToSocks = "";
+            public Stopwatch start = new Stopwatch();
 
             // Установка нового соединения клиента с прокси
             public Connection(Socket connection, ListenConfiguration listen)
@@ -37,6 +39,7 @@ namespace vinnysocks5proxy
                 this.listen     = listen;
 
                 connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
+                start.Start();
 
                 ThreadPool.QueueUserWorkItem
                 (

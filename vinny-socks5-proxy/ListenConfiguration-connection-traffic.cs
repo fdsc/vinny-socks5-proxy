@@ -75,8 +75,12 @@ namespace vinnysocks5proxy
                         }
                         while (!doTerminate);
 
-                        connectionTo?.Shutdown(SocketShutdown.Both);
-                        connectionTo?.Close();
+                        doTerminate = true;
+                        lock (this)
+                        {
+                            connectionTo?.Shutdown(SocketShutdown.Both);
+                            connectionTo?.Close();
+                        }
 	                }
                 );
                 clientData.IsBackground = true;
@@ -137,7 +141,10 @@ namespace vinnysocks5proxy
                         }
                         while (!doTerminate);
 
-                        Dispose();
+                        lock (this)
+                        {
+                            Dispose();
+                        }
                     }
                 );
                 serverData.IsBackground = true;

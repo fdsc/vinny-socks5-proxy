@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using static vinnysocks5proxy.Helper;
 using cryptoprime;
 using System.Text;
+using System.Diagnostics;
 
 namespace vinnysocks5proxy
 {
@@ -55,14 +56,15 @@ namespace vinnysocks5proxy
             public void Dispose(bool doNotDelete)
             {
                 doTerminate = true;
-                LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo}, received bytes {SizeOfTransferredDataFrom}", connection, 3);
+                start.Stop();
+                LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo.ToString("N0")}, received bytes {SizeOfTransferredDataFrom.ToString("N0")}; time {start.Elapsed}", connection, 2);
 
                 if (!doNotDelete)
                 lock (listen.connections)
                     listen.connections.Remove(this);
 
-                connection  ?.Dispose();
-                connectionTo?.Dispose();
+                try { connection  ?.Dispose(); } catch {}
+                try { connectionTo?.Dispose(); } catch {}
                 connection   = null;
                 connectionTo = null;
             }
