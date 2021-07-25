@@ -68,36 +68,38 @@ namespace vinnysocks5proxy
             lock (log)
             {
                 if (debug > 4 && b != null)
-                    Log($"error for connection {connection.LocalEndPoint.ToString()} -> {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message + "\r\n\r\n" + BitConverter.ToString(b, 0, available > 1024 ? 1024 : available));
+                    Log($"error for connection {connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message + "\r\n\r\n" + BitConverter.ToString(b, 0, available > 1024 ? 1024 : available), 1);
                 else
-                    Log($"error for connection {connection.LocalEndPoint.ToString()} -> {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message);
+                if (debug > 0)
+                    Log($"error for connection {connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message, 1);
             }
         }
         
-        public void LogForConnection(string Message, Socket connection)
+        public void LogForConnection(string Message, Socket connection, int debugLevel)
         {
             if (log == null)
                 return;
 
+            if (debug > 0 && debug >= debugLevel)
             lock (log)
             {
                 try
                 {
-                    if (debug > 0)
-                        Log($"{connection.LocalEndPoint.ToString()} -> {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message);
+                    Log($"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message, debugLevel);
                 }
                 catch
                 {
-                    Log("connection ???: " + Message);
+                    Log("connection ???: " + Message, debugLevel);
                 }
             }
         }
 
-        public void Log(string Message)
+        public void Log(string Message, int debugLevel)
         {
             if (log == null)
                 return;
 
+            if (debug > 0 && debug >= debugLevel)
             lock (log)
             File.AppendAllText(log.FullName, getDateTime() + "\r\n" + Message + "\r\n----------------------------------------------------------------\r\n\r\n");
         }
@@ -112,14 +114,14 @@ namespace vinnysocks5proxy
                 listen_socket.Bind(ipe);
                 listen_socket.Listen(max_connections);
     
-                Log("Listening started");
+                Log($"Listening started {ipe}", 0);
             }
             catch (Exception e)
             {
                 lock (log)
                 {
-                    Log("Error occured in a start of listening");
-                    Log(e.Message);
+                    Log("Error occured in a start of listening", 0);
+                    Log(e.Message, 0);
                 }
             }
         }
@@ -134,6 +136,7 @@ namespace vinnysocks5proxy
 
         public void Dispose()
         {
+            var localAddress = (listen_socket.LocalEndPoint as IPEndPoint).ToString();
             lock (connections)
             {
                 foreach (var connection in connections)
@@ -145,8 +148,7 @@ namespace vinnysocks5proxy
                     }
                     catch (Exception e)
                     {
-                        Log("Exception occured by the close connections process");
-                        Log(e.Message);
+                        Log("Exception occured by the close connections process\r\n" + e.Message, 0);
                     }
                 }
             }
@@ -161,8 +163,7 @@ namespace vinnysocks5proxy
                 }
                 catch (Exception e)
                 {
-                    Log("Exception occured by the close connections process");
-                    Log(e.Message);
+                    Log("Exception occured by the close connections process\r\n" + e.Message, 0);
                 }
 
                 connections.Clear();
@@ -171,7 +172,7 @@ namespace vinnysocks5proxy
             listen_socket?.Dispose();
             listen_socket = null;
             
-            Log("Listening ended");
+            Log($"Listening ended {localAddress}", 0);
         }
 
         public int CompareTo(ListenConfiguration other)

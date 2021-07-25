@@ -36,7 +36,7 @@ namespace vinnysocks5proxy
     
                         if (count > countOfTimeouts)
                         {
-                            listen.Log($"error for connection {connection.RemoteEndPoint.ToString()}: not enought bytes; available {available}");
+                            listen.Log($"error for connection {connection.RemoteEndPoint.ToString()}: not enought bytes; available {available}", 0);
                             // this.Dispose();
                             return 0;
                         }
@@ -55,7 +55,7 @@ namespace vinnysocks5proxy
             public void Dispose(bool doNotDelete)
             {
                 doTerminate = true;
-                listen.LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo}, received bytes {SizeOfTransferredDataFrom}", connection);
+                listen.LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo}, received bytes {SizeOfTransferredDataFrom}", connection, 3);
 
                 if (!doNotDelete)
                 lock (listen.connections)

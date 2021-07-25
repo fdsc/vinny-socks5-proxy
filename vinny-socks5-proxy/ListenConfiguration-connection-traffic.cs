@@ -17,7 +17,7 @@ namespace vinnysocks5proxy
         {
             public void doProcessTraffic()
             {
-                listen.LogForConnection("Starting connections for user data for " + connectionTo.RemoteEndPoint, connection);
+                listen.LogForConnection($"Starting connections for user data for {connectionTo.LocalEndPoint} -> {connectionTo.RemoteEndPoint}", connection, 2);
 
                 var clientData = new Thread
                 (
@@ -41,25 +41,28 @@ namespace vinnysocks5proxy
                                     SizeOfTransferredDataTo += sended;
 
                                     if (listen.debug > 4)
-                                    listen.LogForConnection("Transfer data to, size " + sended, connection);
+                                    listen.LogForConnection("Transfer data to, size " + sended, connection, 5);
                                 }
                             }
                             catch (Exception e)
                             {
                                 if (doTerminate)
-                                    return;
+                                    break;
 
                                 try
                                 {
-                                    listen.LogForConnection("Error with client data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection);
+                                    listen.LogForConnection("Error with client data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection, 0);
                                 }
                                 catch
                                 {
-                                    listen.LogForConnection("Error with client data for ???\r\n" + e.Message, connection);
+                                    listen.LogForConnection("Error with client data for ???\r\n" + e.Message, connection, 0);
+                                    break;
                                 }
                             }
                         }
                         while (!doTerminate);
+
+                        connectionTo?.Shutdown(SocketShutdown.Both);
 	                }
                 );
                 clientData.IsBackground = true;
@@ -87,7 +90,7 @@ namespace vinnysocks5proxy
                                     SizeOfTransferredDataFrom += sended;
 
                                     if (listen.debug > 4)
-                                    listen.LogForConnection("Transfer data from, size " + sended, connection);
+                                    listen.LogForConnection("Transfer data from, size " + sended, connection, 5);
                                 }
                             }
                             catch (Exception e)
@@ -97,11 +100,11 @@ namespace vinnysocks5proxy
                                    
                                 try
                                 {
-                                    listen.LogForConnection("Error with remote server data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection);
+                                    listen.LogForConnection("Error with remote server data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection, 0);
                                 }
                                 catch
                                 {
-                                    listen.LogForConnection("Error with remote server data for ???\r\n" + e.Message, connection);
+                                    listen.LogForConnection("Error with remote server data for ???\r\n" + e.Message, connection, 0);
                                 }
                             }
                         }
@@ -122,7 +125,7 @@ namespace vinnysocks5proxy
                 do
                 {
                     if (offset > 0 && listen.debug > 4)
-                        listen.LogForConnection($"sleeped / bytes {offset}", connection);
+                        listen.LogForConnection($"sleeped / bytes {offset}", connection, 5);
 
                     recieved   = connection.Receive(b, offset, b.Length - offset, SocketFlags.None);
                     offset    += recieved;

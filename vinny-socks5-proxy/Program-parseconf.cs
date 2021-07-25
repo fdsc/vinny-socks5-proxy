@@ -61,7 +61,7 @@ namespace vinnysocks5proxy
                         if (current == null)
                             Log(pVal);
                         else
-                            current.Log(Replace(pVal, current));
+                            current.Log(Replace(pVal, current), 0);
                         break;
 
                     case "listen":
@@ -326,7 +326,7 @@ namespace vinnysocks5proxy
                     Console.Error.WriteLine("You must set listen_address and listen_port (not setted both or just one)");
                     Console.Error.WriteLine(ls.listen_ip.ToString());
 
-                    ls.Log("Incorrect address in config");
+                    ls.Log("Incorrect address in config", 0);
 
                     return false;
                 }
