@@ -1,0 +1,20 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vinny-socks5-proxy", "vinny-socks5-proxy\vinny-socks5-proxy.csproj", "{798DFC4D-19AA-4825-869B-A5CB82F9215F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{798DFC4D-19AA-4825-869B-A5CB82F9215F}.Debug|x86.ActiveCfg = Debug|x86
+		{798DFC4D-19AA-4825-869B-A5CB82F9215F}.Debug|x86.Build.0 = Debug|x86
+		{798DFC4D-19AA-4825-869B-A5CB82F9215F}.Release|x86.ActiveCfg = Release|x86
+		{798DFC4D-19AA-4825-869B-A5CB82F9215F}.Release|x86.Build.0 = Release|x86
+		{798DFC4D-19AA-4825-869B-A5CB82F9215F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{798DFC4D-19AA-4825-869B-A5CB82F9215F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
