@@ -28,12 +28,15 @@ namespace vinnysocks5proxy
             public const int EC_Command_not_supported         = 0x07;
             public const int EC_Address_type_not_supported    = 0x08;
             
+            public string connectToSocks = "";
 
             // Установка нового соединения клиента с прокси
             public Connection(Socket connection, ListenConfiguration listen)
             {
                 this.connection = connection;
                 this.listen     = listen;
+
+                connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
 
                 ThreadPool.QueueUserWorkItem
                 (
@@ -85,7 +88,7 @@ namespace vinnysocks5proxy
     
                             lock (listen.log)
                             {
-                                listen.LogErrorForConnection($"The correct authorization method was not found (check user and password in client and in server)", connection, b, available);
+                                LogErrorForConnection($"The correct authorization method was not found (check user and password in client and in server)", connection, b, available);
                             }
 
                             return;
@@ -106,7 +109,7 @@ namespace vinnysocks5proxy
 
                                 if (b[0] != 0x01)
                                 {
-                                    listen.LogErrorForConnection($"Incorrect authentication version (must be 1): {b[0]}", connection, null, 0);
+                                    LogErrorForConnection($"Incorrect authentication version (must be 1): {b[0]}", connection, null, 0);
                                     return;
                                 }
 
@@ -127,7 +130,7 @@ namespace vinnysocks5proxy
                                 var key = listen.users.IndexOfKey(user);
                                 if (key < 0)
                                 {
-                                    listen.LogErrorForConnection($"Incorrect user or password: " + user, connection, null, 0);
+                                    LogErrorForConnection($"Incorrect user or password: " + user, connection, null, 0);
                                     connection.Send(new byte[] { 0x01, 0x01 });
                                     return;
                                 }
@@ -135,13 +138,13 @@ namespace vinnysocks5proxy
                                 // TODO: Здесь может быть тайминг-атака; заменить на надёжное сравнение
                                 if (password != listen.users[user])
                                 {
-                                    listen.LogErrorForConnection($"Incorrect user or password: " + user, connection, null, 0);
+                                    LogErrorForConnection($"Incorrect user or password: " + user, connection, null, 0);
                                     connection.Send(new byte[] { 0x01, 0x01 });
                                     return;
                                 }
 
                                 // Успешный вход
-                                listen.LogForConnection($"Success login for user '" + user + "'", connection, 0);
+                                LogForConnection($"Success login for user '" + user + "'", connection, 0);
                                 connection.Send(new byte[] { 0x01, 0x00 });
                             }
     
@@ -171,7 +174,7 @@ namespace vinnysocks5proxy
                             // Мы принимаем только CONNECT
                             if (b[1] != 0x01)
                             {
-                                listen.LogErrorForConnection($"vinny-socks5-proxy can accept only 'CONNECT' command, but command " + b[1], connection, b, available);
+                                LogErrorForConnection($"vinny-socks5-proxy can accept only 'CONNECT' command, but command " + b[1], connection, b, available);
                                 processResponseForRequest(bb, EC_Command_not_supported);
                                 return;
                             }
@@ -181,21 +184,21 @@ namespace vinnysocks5proxy
                             var addressType = b[3];
                             if (addressType != 0x01 && addressType != 0x03 && addressType != 0x04)
                             {
-                                listen.LogErrorForConnection($"The unknown address type: " + addressType, connection, b, available);
+                                LogErrorForConnection($"The unknown address type: " + addressType, connection, b, available);
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
                             }
                             
                             if (addressType == 0x01 && !listen.namesGranted_ipv4)
                             {
-                                listen.LogErrorForConnection($"ipv4 address is denied by configuration", connection, b, available);
+                                LogErrorForConnection($"ipv4 address is denied by configuration", connection, b, available);
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
                             }
     
                             if (addressType == 0x03 && !listen.namesGranted_domain)
                             {
-                                listen.LogErrorForConnection($"The domain name type of address is denied by configuration", connection, b, available);
+                                LogErrorForConnection($"The domain name type of address is denied by configuration", connection, b, available);
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
                             }
@@ -203,7 +206,7 @@ namespace vinnysocks5proxy
                             if (addressType == 0x04 && !listen.namesGranted_ipv6)
                             {
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
-                                listen.LogErrorForConnection($"ipv6 address is denied by configuration", connection, b, available);
+                                LogErrorForConnection($"ipv6 address is denied by configuration", connection, b, available);
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
                             }
@@ -227,13 +230,13 @@ namespace vinnysocks5proxy
                                     
                                     try
                                     {
-                                        listen.LogForConnection("Request for connection to " + ipe, connection, 2);
+                                        LogForConnection("Request for connection to " + ipe, connection, 2);
                                         connectionTo.Connect(ipe);
                                         connected = true;
                                     }
                                     catch (SocketException e)
                                     {
-                                        listen.LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 2);
+                                        LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 2);
                                         return;
                                     }
                                 }
@@ -248,7 +251,7 @@ namespace vinnysocks5proxy
     
                                     bb.addWithCopy(b, -1, 5, 5 + b[4]);
                                     var domainName = Encoding.ASCII.GetString(bb.getBytes());
-                                    listen.LogForConnection("Request for connection to '" + domainName + "'", connection, 2);
+                                    LogForConnection("Request for connection to '" + domainName + "'", connection, 2);
                                     
     
                                     var addresses = Dns.GetHostAddresses(domainName);
@@ -259,7 +262,7 @@ namespace vinnysocks5proxy
                                         connectionTo    = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                                         var ipe         = new IPEndPoint(addr, ConnectToPort);
                                         
-                                        listen.LogForConnection("Try connection to " + ipe, connection, 4);
+                                        LogForConnection("Try connection to " + ipe, connection, 4);
                                         try
                                         {
                                             connectionTo.Connect(ipe);
@@ -276,7 +279,7 @@ namespace vinnysocks5proxy
                                             else
                                                 anotherError++;
 
-                                            listen.LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 2);
+                                            LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 2);
                                         }
                                     }
                                 }
@@ -310,18 +313,18 @@ namespace vinnysocks5proxy
                             {
                                 if (e.ErrorCode == 11001)
                                 {
-                                    listen.LogErrorForConnection($"Could not resolve host", connection, null, 0);
+                                    LogErrorForConnection($"Could not resolve host", connection, null, 0);
                                     processResponseForRequest(bb, EC_Network_unreachable);
                                 }
                                 else
                                 {
-                                    listen.LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, b, available);
+                                    LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, b, available);
                                     processResponseForRequest(bb, EC_general_SOCKS_server_failure);
                                 }
                             }
                             catch (Exception e)
                             {
-                                listen.LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, b, available);
+                                LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, b, available);
                                 processResponseForRequest(bb, EC_general_SOCKS_server_failure);
                             }
                             
@@ -330,7 +333,7 @@ namespace vinnysocks5proxy
                         {
                             lock (listen.log)
                             {
-                                listen.LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, null, 0);
+                                LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, null, 0);
                             }
                         }
                         finally
@@ -402,6 +405,33 @@ namespace vinnysocks5proxy
 
                 lock (connectionTo)
                     Monitor.PulseAll(connectionTo);
+            }
+
+            public void LogErrorForConnection(string Message, Socket connection, byte[] b, int available)
+            {
+                if (listen.log == null)
+                    return;
+
+                lock (listen.log)
+                {
+                    if (listen.debug > 4 && b != null)
+                        listen.Log($"error for connection {connectToSocks}" + "\r\n" + Message + "\r\n\r\n" + BitConverter.ToString(b, 0, available > 1024 ? 1024 : available), 1);
+                    else
+                    if (listen.debug > 0)
+                        listen.Log($"error for connection {connectToSocks}" + "\r\n" + Message, 1);
+                }
+            }
+            
+            public void LogForConnection(string Message, Socket connection, int debugLevel)
+            {
+                if (listen.log == null)
+                    return;
+    
+                if (listen.debug > 0 && listen.debug >= debugLevel)
+                lock (listen.log)
+                {
+                    listen.Log($"{connectToSocks}" + "\r\n" + Message, debugLevel);
+                }
             }
         }
 

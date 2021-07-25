@@ -55,7 +55,7 @@ namespace vinnysocks5proxy
             public void Dispose(bool doNotDelete)
             {
                 doTerminate = true;
-                listen.LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo}, received bytes {SizeOfTransferredDataFrom}", connection, 3);
+                LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo}, received bytes {SizeOfTransferredDataFrom}", connection, 3);
 
                 if (!doNotDelete)
                 lock (listen.connections)

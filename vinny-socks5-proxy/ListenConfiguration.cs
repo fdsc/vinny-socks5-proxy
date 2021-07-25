@@ -60,40 +60,6 @@ namespace vinnysocks5proxy
             listen_ip = IPAddress.Parse(AddressWithoutPort);
         }
 
-        public void LogErrorForConnection(string Message, Socket connection, byte[] b, int available)
-        {
-            if (log == null)
-                return;
-
-            lock (log)
-            {
-                if (debug > 4 && b != null)
-                    Log($"error for connection {connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message + "\r\n\r\n" + BitConverter.ToString(b, 0, available > 1024 ? 1024 : available), 1);
-                else
-                if (debug > 0)
-                    Log($"error for connection {connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message, 1);
-            }
-        }
-        
-        public void LogForConnection(string Message, Socket connection, int debugLevel)
-        {
-            if (log == null)
-                return;
-
-            if (debug > 0 && debug >= debugLevel)
-            lock (log)
-            {
-                try
-                {
-                    Log($"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}" + "\r\n" + Message, debugLevel);
-                }
-                catch
-                {
-                    Log("connection ???: " + Message, debugLevel);
-                }
-            }
-        }
-
         public void Log(string Message, int debugLevel)
         {
             if (log == null)

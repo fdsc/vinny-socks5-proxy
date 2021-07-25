@@ -17,7 +17,7 @@ namespace vinnysocks5proxy
         {
             public void doProcessTraffic()
             {
-                listen.LogForConnection($"Starting connections for user data for {connectionTo.LocalEndPoint} -> {connectionTo.RemoteEndPoint}", connection, 2);
+                LogForConnection($"Starting connections for user data for {connectionTo.LocalEndPoint} -> {connectionTo.RemoteEndPoint}", connection, 2);
 
                 var clientData = new Thread
                 (
@@ -31,6 +31,9 @@ namespace vinnysocks5proxy
                         {
                             try
                             {
+                                if (!connection.Connected || !connectionTo.Connected)
+                                    break;
+
                                 // Ждём данные от клиента
                                 waitBytes(connection, b, ref available, listen.SleepTimeTo, listen.SleepTimeToBytes);
 
@@ -41,8 +44,16 @@ namespace vinnysocks5proxy
                                     SizeOfTransferredDataTo += sended;
 
                                     if (listen.debug > 4)
-                                    listen.LogForConnection("Transfer data to, size " + sended, connection, 5);
+                                    LogForConnection("Transfer data to, size " + sended, connection, 5);
                                 }
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                break;
+                            }
+                            catch (SocketException)
+                            {
+                                break;
                             }
                             catch (Exception e)
                             {
@@ -51,11 +62,13 @@ namespace vinnysocks5proxy
 
                                 try
                                 {
-                                    listen.LogForConnection("Error with client data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection, 0);
+                                    LogForConnection("Error with client data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection, 0);
+                                    if (!connection.Connected)
+                                        break;
                                 }
                                 catch
                                 {
-                                    listen.LogForConnection("Error with client data for ???\r\n" + e.Message, connection, 0);
+                                    LogForConnection("Error with client data for ???\r\n" + e.Message, connection, 0);
                                     break;
                                 }
                             }
@@ -63,6 +76,7 @@ namespace vinnysocks5proxy
                         while (!doTerminate);
 
                         connectionTo?.Shutdown(SocketShutdown.Both);
+                        connectionTo?.Close();
 	                }
                 );
                 clientData.IsBackground = true;
@@ -80,6 +94,9 @@ namespace vinnysocks5proxy
                         {
                             try
                             {
+                                if (!connection.Connected || !connectionTo.Connected)
+                                    break;
+
                                 // Ждём данные от клиента
                                 waitBytes(connectionTo, b, ref available, listen.SleepTimeFrom, listen.SleepTimeFromBytes);
 
@@ -90,21 +107,31 @@ namespace vinnysocks5proxy
                                     SizeOfTransferredDataFrom += sended;
 
                                     if (listen.debug > 4)
-                                    listen.LogForConnection("Transfer data from, size " + sended, connection, 5);
+                                    LogForConnection("Transfer data from, size " + sended, connection, 5);
                                 }
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                break;
+                            }
+                            catch (SocketException)
+                            {
+                                break;
                             }
                             catch (Exception e)
                             {
                                 if (doTerminate)
-                                    return;
+                                    break;
                                    
                                 try
                                 {
-                                    listen.LogForConnection("Error with remote server data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection, 0);
+                                    LogForConnection("Error with remote server data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection, 0);
+                                    if (!connection.Connected)
+                                        break;
                                 }
                                 catch
                                 {
-                                    listen.LogForConnection("Error with remote server data for ???\r\n" + e.Message, connection, 0);
+                                    LogForConnection("Error with remote server data for ???\r\n" + e.Message, connection, 0);
                                 }
                             }
                         }
@@ -125,7 +152,7 @@ namespace vinnysocks5proxy
                 do
                 {
                     if (offset > 0 && listen.debug > 4)
-                        listen.LogForConnection($"sleeped / bytes {offset}", connection, 5);
+                        LogForConnection($"sleeped / bytes {offset}", connection, 5);
 
                     recieved   = connection.Receive(b, offset, b.Length - offset, SocketFlags.None);
                     offset    += recieved;
