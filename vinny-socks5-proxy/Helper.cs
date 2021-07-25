@@ -9,7 +9,7 @@ namespace vinnysocks5proxy
         {
             var now  = DateTime.Now;
             var date = now.Year.ToString("D4") + "." + now.Month .ToString("D2") + "." + now.Day   .ToString("D2");
-            var time = now.Hour.ToString("D2") + ":" + now.Minute.ToString("D2") + ":" + now.Second.ToString("D2");
+            var time = now.Hour.ToString("D2") + ":" + now.Minute.ToString("D2") + ":" + now.Second.ToString("D2") + "." + now.Millisecond.ToString("D3");
 
             return date + " " + time;
         }

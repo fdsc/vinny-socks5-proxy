@@ -20,6 +20,7 @@
     <ExternalConsole>true</ExternalConsole>
     <PlatformTarget>x86</PlatformTarget>
     <LangVersion>Latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <Optimize>false</Optimize>
@@ -27,8 +28,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
-    <PlatformTarget>x86</PlatformTarget>
     <LangVersion>Latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,6 +38,7 @@
     <OutputPath>bin\Release</OutputPath>
     <WarningLevel>4</WarningLevel>
     <LangVersion>Latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -46,6 +48,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="Program-parseconf.cs" />
+    <Compile Include="ListenConfiguration.cs" />
+    <Compile Include="ListenConfiguration-connection.cs" />
+    <Compile Include="BytesBuilder.cs" />
+    <Compile Include="ListenConfiguration-connection-est.cs" />
+    <Compile Include="ListenConfiguration-connection-traffic.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="vinny-socks5-proxy.conf">

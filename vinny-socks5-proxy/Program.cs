@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-
+using System.Threading.Tasks;
 using static vinnysocks5proxy.Helper;
 
 // Стандарт по socks5
@@ -18,15 +19,11 @@ namespace vinnysocks5proxy
         public static bool   toTerminate = false;
         public static bool   isError     = false;
 
-        public static Socket listen_socket = null;
+        
 
+        public static List<ListenConfiguration>  listens = new List<ListenConfiguration>();
 
-        public static string     listen_address  = null;
-        public static string     listen_port     = null;
-        public static FileInfo   log_file        = null;
-        public static int        max_connections = 64;
-        public static IPEndPoint listen          = default;
-
+        public static FileInfo         log_file          = null;        
         public static ManualResetEvent ExitWaitEvent   = new ManualResetEvent(false);
         public static ManualResetEvent TerminatedEvent = new ManualResetEvent(false);
 
@@ -36,19 +33,20 @@ namespace vinnysocks5proxy
         {
             try
             {
-                if (!getFromConfFile(args))
+                if (!getFromConfFile(args) || args.Length >= 2)
                 {
                     Console.WriteLine(getHelpString());
                     Log("Incorrect .conf file");
                     return 1;
                 }
-    
+
                 Console.WriteLine("starting " + getDateTime());
     
                 Console.CancelKeyPress              += Console_CancelKeyPress;
                 AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
 
                 AcceptThread = new Thread(AcceptThreadFunc);
+                AcceptThread.IsBackground = true;
                 AcceptThread.Start();
 
                 do
@@ -68,7 +66,8 @@ namespace vinnysocks5proxy
             }
             finally
             {
-                listen_socket?.Dispose();
+                foreach (var ls in listens)
+                    ls.Dispose();
             }
 
             Console.WriteLine("Terminated " + getDateTime());
@@ -101,20 +100,39 @@ namespace vinnysocks5proxy
 
         static void AcceptThreadFunc()
         {
+            SortedList<ListenConfiguration, Task> tasks = new SortedList<ListenConfiguration, Task>(16);
             do
             {
-                var connection = listen_socket.Accept();
-                
-                ThreadPool.QueueUserWorkItem
-                (
-                    delegate
-                    {
-                        
-	                }
-                );
+                var t = Accept(tasks);
+                t.Wait();
             }
             while (!toTerminate);
         }
 
+        static async Task Accept(SortedList<ListenConfiguration, Task> tasks)
+        {
+            foreach (var ls in listens)
+            {
+                if (!tasks.ContainsKey(ls))
+                    AddListenToWaitConnect(tasks, ls);
+            }
+
+            var connected = (Task<Socket>) await Task.WhenAny(tasks.Values);
+
+            var index = tasks.IndexOfValue(connected);
+
+            var listen  = tasks.Keys[index];
+            tasks.RemoveAt(index);
+            AddListenToWaitConnect(tasks, listen);
+
+            listen.newConnection(await connected);
+        }
+
+        private static void AddListenToWaitConnect(SortedList<ListenConfiguration, Task> tasks, ListenConfiguration ls)
+        {
+            var task = ls.Accept();
+            if (task != null)
+                tasks.Add(ls, task);
+        }
     }
 }

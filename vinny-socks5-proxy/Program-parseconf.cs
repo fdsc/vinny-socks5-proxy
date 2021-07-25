@@ -25,6 +25,9 @@ namespace vinnysocks5proxy
                 return false;
             }
             
+            ListenConfiguration current = null;
+            string              curUser = null;
+
             var lines_raw = File.ReadLines(confFilePath, new System.Text.UTF8Encoding());
             foreach (var line_raw in lines_raw)
             {
@@ -44,7 +47,7 @@ namespace vinnysocks5proxy
                 }
 
                 var pName = @params[0].Trim().ToLowerInvariant();
-                var pVal  = @params[1].Trim().ToLowerInvariant();
+                var pVal  = @params[1].Trim();
                 
                 
                 switch (pName)
@@ -53,31 +56,227 @@ namespace vinnysocks5proxy
                         Console.Error.WriteLine("error in conf file " + confFilePath);
                         Console.Error.WriteLine(pVal);
                         return false;
+
                     case "info":
-                        Log(pVal);
+                        if (current == null)
+                            Log(pVal);
+                        else
+                            current.Log(Replace(pVal, current));
                         break;
 
-                    case "listen_address":
-                        if (listen_address != null)
+                    case "listen":
+                        try
+                        {
+                            current = new ListenConfiguration();
+                            curUser = null;
+
+                            listens.Add(current);
+                            current.SetAddress(pVal);
+                        }
+                        catch (Exception e)
                         {
                             Console.Error.WriteLine("error in conf file " + confFilePath);
-                            Console.Error.WriteLine("listen_address may be only one");
+                            Console.Error.WriteLine("listen address is incorrect (example: listen 127.0.0.1)");
+                            Console.Error.WriteLine(e.Message);
                             return false;
                         }
 
-                        listen_address = pVal;
                         break;
-                    case "listen_port":
-                        listen_port = pVal;
+
+                    case "port":
+                        try
+                        {
+                            if (!CheckCurrentAndPrintError(current, confFilePath) || !current.SetPort(int.Parse(pVal)))
+                                return false;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("listen port is incorrect (example: port 1080)");
+                            Console.Error.WriteLine(e.Message);
+                            return false;
+                        }
+
                         break;
+
+                    case "user":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+
+                        curUser = pVal.Trim();
+
+                        break;
+
+                    case "pwd":
+                    case "pass":
+                    case "passwd":
+                    case "password":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+
+                        if (curUser == null)
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("user must be specified before password record: " + line);
+                            return false;
+                        }
+
+                         current.users.Add(curUser, pVal.Trim());
+                         curUser = null;
+                            
+                        break;
+
+                    case "ipv4":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+                            
+                        if (pVal == "reject")
+                            current.namesGranted_ipv4 = false;
+                        else
+                        if (pVal == "accept")
+                            current.namesGranted_ipv4 = true;
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("ipv4 must be 'accept' or 'reject' but have " + pVal);
+                            return false;
+                        }
+                        break;
+
+                    case "ipv6":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+                            
+                        if (pVal == "reject")
+                            current.namesGranted_ipv6 = false;
+                        else
+                        if (pVal == "accept")
+                            current.namesGranted_ipv6 = true;
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("ipv4 must be 'accept' or 'reject' but have " + pVal);
+                            return false;
+                        }
+                        break;
+
+                    case "domain":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+                            
+                        if (pVal == "reject")
+                            current.namesGranted_domain = false;
+                        else
+                        if (pVal == "accept")
+                            current.namesGranted_domain = true;
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("ipv4 must be 'accept' or 'reject' but have " + pVal);
+                            return false;
+                        }
+                        break;
+
+                    case "debug":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+                            
+                        if (Int32.TryParse(pVal, out int debugLevel))
+                        {
+                            current.debug = debugLevel;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("debug level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
+                    case "sleeptimeto":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+
+                        if (Int32.TryParse(pVal, out int SleepTimeTo))
+                        {
+                            current.SleepTimeTo = SleepTimeTo;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("SleepTime level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
+                    case "sleeptimetobytes":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+
+                        if (Int32.TryParse(pVal, out int SleepTimeToBytes))
+                        {
+                            current.SleepTimeToBytes = SleepTimeToBytes;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("SleepTime level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
+                    case "sleeptimefrom":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+
+                        if (Int32.TryParse(pVal, out int SleepTimeFrom))
+                        {
+                            current.SleepTimeFrom = SleepTimeFrom;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("SleepTime level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
+                    case "sleeptimefrombytes":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+
+                        if (Int32.TryParse(pVal, out int SleepTimeFromBytes))
+                        {
+                            current.SleepTimeFromBytes = SleepTimeFromBytes;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("SleepTime level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
                     case "log_file":
                         try
                         {
-                            log_file = new FileInfo(pVal);
-                            if (!log_file.Exists)
-                                File.WriteAllText(log_file.FullName, "");
-
-                            Log("Starting");
+                            if (current == null)
+                            {
+                                log_file = new FileInfo(pVal);
+                                if (!log_file.Exists)
+                                    File.WriteAllText(log_file.FullName, "");
+                            }
+                            else
+                            {
+                                current.log = new FileInfo(Replace(pVal, current));
+                                if (!log_file.Exists)
+                                    File.WriteAllText(log_file.FullName, "");
+                            }
                         }
                         catch (Exception e)
                         {
@@ -87,11 +286,15 @@ namespace vinnysocks5proxy
                             return false;
                         }
                         break;
+
                     case "max_connections":
                         try
                         {
-                            max_connections = int.Parse(pVal);
-                            if (max_connections < 1)
+                            if (!CheckCurrentAndPrintError(current, confFilePath))
+                                return false;
+
+                            current.max_connections = int.Parse(pVal);
+                            if (current.max_connections < 1)
                             {
                                 Console.Error.WriteLine("error in conf file " + confFilePath);
                                 Console.Error.WriteLine("max_connections incorrect (must be positive number): " + pVal);
@@ -112,37 +315,60 @@ namespace vinnysocks5proxy
                         return false;
                 }
             }
+
+            current = null;
             
-            if (listen_address == null || listen_port == null)
+            foreach (var ls in listens)
             {
-                Console.Error.WriteLine("error in conf file " + confFilePath);
-				Console.Error.WriteLine("You must set listen_address and listen_port (not setted both or just one)");
-                return false;
-            }
-			
-            
-            try
-            {
-                var listen_ip = IPAddress.Parse(listen_address);
-                var listen_p  = Int32.Parse(listen_port);
-			    listen = new IPEndPoint(listen_ip, listen_p);
-            }
-            catch (Exception e)
-            {
-                Console.Error.WriteLine("error in conf file " + confFilePath);
-                Console.Error.WriteLine("listen_address or listen_port is incorrect");
-                Console.Error.WriteLine(e.Message);
+                if (!ls.checkCorrect())
+                {
+                    Console.Error.WriteLine("error in conf file " + confFilePath);
+                    Console.Error.WriteLine("You must set listen_address and listen_port (not setted both or just one)");
+                    Console.Error.WriteLine(ls.listen_ip.ToString());
 
-                return false;
+                    ls.Log("Incorrect address in config");
+
+                    return false;
+                }
             }
 
-            listen_socket = new Socket(listen.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            listen_socket.Bind(listen);
-            listen_socket.Listen(65536);
-
-            Log("Listen " +  listen.ToString());
+            foreach (var ls in listens)
+            {
+                ls.Listen();
+            }
 
             return true;
+        }
+        
+        public static bool CheckCurrentAndPrintError(ListenConfiguration current, string confFilePath)
+        {
+            if (current != null)
+                return true;
+
+            Console.Error.WriteLine("error in conf file " + confFilePath);
+            Console.Error.WriteLine("current listen not setted, but an option occured for listen (insert listen option before another options)");
+            
+            return false;
+        }
+
+        public static string Replace(string toReplace, ListenConfiguration current)
+        {
+            var str = toReplace;
+            if (current == null)
+            {
+                str = str.Replace("$$$addr$$$", "(error:null)");
+                str = str.Replace("$$$port$$$", "(error:null)");
+                return str;
+            }
+
+            if (current.ipe != null)
+                str = str.Replace("$$$addr$$$", current.ipe?.ToString());
+            else
+                str = str.Replace("$$$addr$$$", "[" + current.listen_ip.ToString() + "]:" + current.port);
+                
+            str = str.Replace("$$$port$$$", current.port.ToString());
+
+            return str;
         }
 
         public static void Log(string Message)
