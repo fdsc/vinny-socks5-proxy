@@ -53,20 +53,37 @@ namespace vinnysocks5proxy
             }
 
             public bool doTerminate = false;
+            public bool isDisposed  = false;
             public void Dispose(bool doNotDelete)
             {
+                if (isDisposed)
+                    return;
+
+                LogForConnection($"Closing connection started; Count of connections in the listener {listen.connections.Count}", connection, 4);
+                try {    if (connection  .Connected) connection  .Shutdown(SocketShutdown.Both);    } catch {}
+                try {    if (connectionTo.Connected) connectionTo.Shutdown(SocketShutdown.Both);    } catch {}
+
                 doTerminate = true;
                 start.Stop();
-                LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo.ToString("N0")}, received bytes {SizeOfTransferredDataFrom.ToString("N0")}; time {start.Elapsed}", connection, 2);
 
-                if (!doNotDelete)
-                lock (listen.connections)
-                    listen.connections.Remove(this);
+                try
+                {
+                    if (!doNotDelete)
+                    lock (listen.connections)
+                        listen.connections.Remove(this);
+                }
+                catch (Exception e)
+                {
+                    listen.Log($"Connection.Dispose {connectToSocks} raised exception " + e.Message, 0);
+                }
 
-                try { connection  ?.Dispose(); } catch {}
-                try { connectionTo?.Dispose(); } catch {}
+                try {  connection  ?.Dispose();  } catch {}
+                try {  connectionTo?.Dispose();  } catch {}
                 connection   = null;
                 connectionTo = null;
+
+                LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo.ToString("N0")}, received bytes {SizeOfTransferredDataFrom.ToString("N0")}; time {start.Elapsed}; Count of connections in the listener {listen.connections.Count}", connection, 2);
+                isDisposed = true;
             }
         }
     }

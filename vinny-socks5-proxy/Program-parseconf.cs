@@ -5,6 +5,8 @@ using System.Net.Sockets;
 using System.Threading;
 
 using static vinnysocks5proxy.Helper;
+using static trusts.Helper;
+using trusts;
 
 // Стандарт по socks5
 // https://datatracker.ietf.org/doc/html/rfc1928
@@ -77,6 +79,24 @@ namespace vinnysocks5proxy
                         {
                             Console.Error.WriteLine("error in conf file " + confFilePath);
                             Console.Error.WriteLine("listen address is incorrect (example: listen 127.0.0.1)");
+                            Console.Error.WriteLine(e.Message);
+                            return false;
+                        }
+
+                        break;
+                        
+                    case "domain_trusts":
+                        try
+                        {
+                            if (!CheckCurrentAndPrintError(current, confFilePath))
+                                return false;
+
+                            current.trusts_domain = new TrustsFile(pVal, current.logger);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine($"domain_trusts is incorrect: '{pVal}'");
                             Console.Error.WriteLine(e.Message);
                             return false;
                         }
@@ -273,7 +293,14 @@ namespace vinnysocks5proxy
                             }
                             else
                             {
-                                current.log = new FileInfo(Replace(pVal, current));
+                                if (current.logger.LogFileName != null)
+                                {
+                                    Console.Error.WriteLine("error in conf file " + confFilePath);
+                                    Console.Error.WriteLine("twice set of log file name " + pVal);
+                                    return false;
+                                }
+
+                                current.logger.SetLogFileName(  Replace(pVal, current)  );
                                 if (!log_file.Exists)
                                     File.WriteAllText(log_file.FullName, "");
                             }
@@ -377,7 +404,7 @@ namespace vinnysocks5proxy
                 return;
 
             lock (log_file)
-            File.AppendAllText(log_file.FullName, getDateTime() + "\r\n" + Message + "\r\n----------------------------------------------------------------\r\n\r\n");
+            File.AppendAllText(log_file.FullName, getDateTime() + $";  pid = {System.Diagnostics.Process.GetCurrentProcess().Id}\r\n" + Message + "\r\n----------------------------------------------------------------\r\n\r\n");
         }
     }
 }

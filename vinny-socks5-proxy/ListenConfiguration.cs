@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using static vinnysocks5proxy.Helper;
+using static trusts.Helper;
+using trusts;
 
 namespace vinnysocks5proxy
 {
@@ -16,11 +18,11 @@ namespace vinnysocks5proxy
         public IPAddress  listen_ip       = default;
         public int        port            = 0;
         public IPEndPoint ipe             = default;
-        
-        public FileInfo   log             = null;
-        
-        public SortedList<string, string> users = new SortedList<string, string>();
-        
+        public TrustsFile trusts_domain   = null;
+
+        public SortedList<string, string> users   = new SortedList<string, string>();
+        public ErrorReporting_SimpleFile  logger  = new ErrorReporting_SimpleFile();
+
         public bool namesGranted_ipv4   = false;
         public bool namesGranted_ipv6   = false;
         public bool namesGranted_domain = false;
@@ -29,8 +31,11 @@ namespace vinnysocks5proxy
         public int  SleepTimeFrom       = -1;
         public int  SleepTimeToBytes    = 0;
         public int  SleepTimeFromBytes  = 0;
+        public bool Incorrect           = false;    // Если true, значит больше не будет прослушиваться
 
-        // Всегда использовать lock(connections) при доступе
+        public string ListenAddressForLog = "";
+
+        // Всегда использовать lock(connections) при доступе. Это список соединений клиентов с сервером
         public List<Connection> connections   = new List<Connection>(128);
 
         public ListenConfiguration()
@@ -51,6 +56,8 @@ namespace vinnysocks5proxy
                 return false;
 
             ipe = new IPEndPoint(listen_ip, port);
+            ListenAddressForLog   = ipe.ToString();
+            logger.Identification = ListenAddressForLog;
 
             return true;
         }
@@ -60,49 +67,46 @@ namespace vinnysocks5proxy
             listen_ip = IPAddress.Parse(AddressWithoutPort);
         }
 
-        public void Log(string Message, int debugLevel)
+        public void Log(string Message, int debugLevel, ErrorReporting.LogTypeCode et = ErrorReporting.LogTypeCode.Usually)
         {
-            if (log == null)
-                return;
-
             if (debug > 0 && debug >= debugLevel)
-            lock (log)
-            File.AppendAllText(log.FullName, getDateTime() + "\r\n" + Message + "\r\n----------------------------------------------------------------\r\n\r\n");
+            {
+                logger.Log(Message, "", et);
+            }
         }
 
         public void Listen()
         {
             try
             {
+                Log($"Listening starting", 4, ErrorReporting.LogTypeCode.Usually);
                 listen_socket?.Dispose();
-    
+
                 listen_socket = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 listen_socket.Bind(ipe);
                 listen_socket.Listen(max_connections);
-    
-                Log($"Listening started {ipe}", 0);
+
+                Log($"Listening started", 3);
             }
             catch (Exception e)
             {
-                lock (log)
-                {
-                    Log("Error occured in a start of listening", 0);
-                    Log(e.Message, 0);
-                }
+                Log("Error occured in a start of listening\r\n" + e.Message, 0);
             }
         }
 
         public Task<Socket> Accept()
         {
-            if (listen_socket == null)
+            if (listen_socket == null || !listen_socket.IsBound)
+            {
+                Incorrect = true;
                 return null;
+            }
 
             return listen_socket.AcceptAsync();
         }
 
         public void Dispose()
         {
-            var localAddress = (listen_socket.LocalEndPoint as IPEndPoint).ToString();
             lock (connections)
             {
                 foreach (var connection in connections)
@@ -140,8 +144,8 @@ namespace vinnysocks5proxy
 
             listen_socket?.Dispose();
             listen_socket = null;
-            
-            Log($"Listening ended {localAddress}", 0);
+
+            Log($"Listening ended", 0);
         }
 
         public int CompareTo(ListenConfiguration other)

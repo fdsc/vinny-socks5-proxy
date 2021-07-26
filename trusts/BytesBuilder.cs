@@ -50,6 +50,11 @@ namespace cryptoprime
             count += bytesToAdded.LongLength;
         }
         
+        /// <summary>Добавляет часть массива в объект</summary>
+        /// <param name="bytesToAdded">Массив</param>
+        /// <param name="index">Порядковый номер блока для добавления (-1 для добавления в конец объекта)</param>
+        /// <param name="start">Индекс байта, с которого начинается копирование</param>
+        /// <param name="afterEnd">Индекс первого байта, не подлежащего копированию</param>
         public void addWithCopy(byte[] bytesToAdded, int index = -1, int start = 0, int afterEnd = 0)
         {
             var b = new byte[afterEnd - start];

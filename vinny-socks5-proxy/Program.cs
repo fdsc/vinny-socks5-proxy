@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using static vinnysocks5proxy.Helper;
+using static trusts.Helper;
 
 // Стандарт по socks5
 // https://datatracker.ietf.org/doc/html/rfc1928
@@ -18,8 +20,6 @@ namespace vinnysocks5proxy
 
         public static bool   toTerminate = false;
         public static bool   isError     = false;
-
-        
 
         public static List<ListenConfiguration>  listens = new List<ListenConfiguration>();
 
@@ -42,8 +42,19 @@ namespace vinnysocks5proxy
 
                 Console.WriteLine("starting " + getDateTime());
     
-                Console.CancelKeyPress              += Console_CancelKeyPress;
-                AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+                try
+                {
+                    Console.CancelKeyPress               += Console_CancelKeyPress;
+                    AppDomain.CurrentDomain.ProcessExit  += CurrentDomain_ProcessExit;
+                    AppDomain.CurrentDomain.DomainUnload += CurrentDomain_DomainUnload;
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine("Error occured");
+                    Console.Error.WriteLine(e.Message);
+                    Console.Error.WriteLine(e.StackTrace);
+                    Log(e.Message + "\r\n" + e.StackTrace);
+                }
 
                 AcceptThread = new Thread(AcceptThreadFunc);
                 AcceptThread.IsBackground = true;
@@ -63,11 +74,23 @@ namespace vinnysocks5proxy
                 Console.Error.WriteLine("Error occured");
                 Console.Error.WriteLine(e.Message);
                 Console.Error.WriteLine(e.StackTrace);
+                Log(e.Message + "\r\n" + e.StackTrace);
             }
             finally
             {
-                foreach (var ls in listens)
-                    ls.Dispose();
+                Parallel.ForEach
+                (
+                    listens,
+                    delegate (ListenConfiguration ls)
+                    {
+                        try
+                        {
+                            ls.Dispose();
+                        }
+                        catch
+                        {}
+    	            }
+                );
             }
 
             Console.WriteLine("Terminated " + getDateTime());
@@ -77,6 +100,7 @@ namespace vinnysocks5proxy
 
             return isError ? 1000 : 0;
         }
+
         /// <summary>Устанавливаем флаг и событие для сообщения всем о том, что мы должны завершиться</summary>
         public static void doTerminate()
         {
@@ -89,6 +113,13 @@ namespace vinnysocks5proxy
             doTerminate();
 
             // Ждём TerminatedEvent, т.к. иначе процесс завершится при выходе из обработчика и не успеет провести корректный выход
+            // Впрочем, здесь он и так ничего не успевает, похоже
+            TerminatedEvent.WaitOne();
+        }
+
+        static void CurrentDomain_DomainUnload(object sender, EventArgs e)
+        {
+            doTerminate();
             TerminatedEvent.WaitOne();
         }
 
@@ -101,31 +132,139 @@ namespace vinnysocks5proxy
         static void AcceptThreadFunc()
         {
             SortedList<ListenConfiguration, Task> tasks = new SortedList<ListenConfiguration, Task>(16);
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Try to srart listeners:");
+            foreach (var ls in listens)
+            {
+                sb.AppendLine(ls.ListenAddressForLog);
+                if (ls.logger.LogFileName != null)
+                    sb.AppendLine(ls.logger.LogFileName);
+                else
+                    sb.AppendLine("no log file");
+            }
+            sb.AppendLine("(result see in listeners logs)");
+            Log(sb.ToString());
+
+            int count = 0;
+            DateTime lastTimeOfError = default;
             do
             {
-                var t = Accept(tasks);
-                t.Wait();
+                try
+                {
+                    var t = Accept(tasks);
+                    t.Wait();
+                }
+                // Это случается, когда программа завершается
+                catch (ThreadAbortException e)
+                {
+                    if (toTerminate)
+                        return;
+
+                    Log("Error with listener: " + e.Message + "\r\n\r\n" + e.StackTrace);
+                    doTerminate();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    count++;
+                    Log("Error with listener: " + e.Message + "\r\n\r\n" + e.StackTrace);
+
+                    var now = DateTime.Now;
+                    if ((now - lastTimeOfError).TotalSeconds > 60)
+                    {
+                        count--;
+                        if ((now - lastTimeOfError).TotalSeconds > 3600)
+                            count = 0;
+                    }
+                    lastTimeOfError = now;
+                }
             }
-            while (!toTerminate);
+            while (!toTerminate && count < 64 && listens.Count > 0);
+
+            if (!toTerminate && (listens.Count <= 0 || count >= 64))
+            {
+                MainClass.Log("Terminating by errors");
+            }
+
+            doTerminate();
         }
 
         static async Task Accept(SortedList<ListenConfiguration, Task> tasks)
         {
+            if (listens.Count <= 0)
+                return;
+
             foreach (var ls in listens)
             {
-                if (!tasks.ContainsKey(ls))
-                    AddListenToWaitConnect(tasks, ls);
+                try
+                {
+                    if (!ls.Incorrect)
+                    if (!tasks.ContainsKey(ls))
+                        AddListenToWaitConnect(tasks, ls);
+                }
+                catch (SocketException e)
+                {
+                    Log("Connection error in the general listener function (removed from listen): " + ls.ListenAddressForLog + "\r\n" + e.Message);
+                    ls.Incorrect = true;
+                }
+                catch (Exception e)
+                {
+                    Log("Error in the general listener function (removed from listen): " + ls.ListenAddressForLog + "\r\n" + e.Message + "\r\n\r\n" + e.StackTrace);
+                    ls.Incorrect = true;
+                }
+            }
+            
+            for (var i = 0; i < listens.Count; i++)
+            {
+                var ls = listens[i];
+                if (ls.Incorrect)
+                {
+                    try {  ls.Dispose();  } catch { }
+                    listens.RemoveAt(i);
+                    i--;
+                    continue;
+                }
             }
 
-            var connected = (Task<Socket>) await Task.WhenAny(tasks.Values);
+            if (listens.Count <= 0)
+                return;
 
-            var index = tasks.IndexOfValue(connected);
+            try
+            {
+                var connected = (Task<Socket>) await Task.WhenAny(tasks.Values);
+    
+                var index = tasks.IndexOfValue(connected);
 
-            var listen  = tasks.Keys[index];
-            tasks.RemoveAt(index);
-            AddListenToWaitConnect(tasks, listen);
+                var listen  = tasks.Keys[index];
+                try
+                {
+                    tasks.RemoveAt(index);
+                    AddListenToWaitConnect(tasks, listen);
+    
+                    listen.newConnection(await connected);
+                }
+                // Это случается, когда программа завершается
+                catch (ThreadAbortException e)
+                {
+                    if (toTerminate)
+                        return;
 
-            listen.newConnection(await connected);
+                    Log("Error with accept connection \r\n" + e.Message);
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    if (toTerminate)
+                        return;
+
+                    Log("Error with accept connection \r\n" + ex.Message + "\r\n\r\n" + ex.StackTrace);
+                }
+            }
+            catch (Exception e)
+            {
+                Log("Error with listen connections \r\n" + e.Message + "\r\n\r\n" + e.StackTrace);
+            }
         }
 
         private static void AddListenToWaitConnect(SortedList<ListenConfiguration, Task> tasks, ListenConfiguration ls)

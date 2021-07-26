@@ -1,0 +1,47 @@
+﻿
+:new:entireDomains
+
+:exactly:d[0:2]
+mail.yandex.ru
+disk.yandex.ru
+
+# :command:accept
+
+:end:entireDomains
+
+:new:1
+
+
+:exactly:d[1]
+yandex
+
+:exactly:d[0]
+com
+net
+
+# :exactly:d[0:1]
+# yandex.com
+# yandex.net
+
+
+# :exactly:d[:]
+# :contains:d[0:1]
+# :regex:d[0:1]
+# :startswith:d[1]
+# :endsswith:d[1]
+# :regex:d[1*] (проходит по всем поддоменам, кроме первого уровня [кроме зон])
+
+# :command:reject
+# :command:accept
+# :command:false
+# :command:true
+
+:call:2
+# :jmp:2
+
+:end:1
+
+
+:new:2
+
+:end:2

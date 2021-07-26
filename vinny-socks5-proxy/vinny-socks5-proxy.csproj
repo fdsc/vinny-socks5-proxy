@@ -23,7 +23,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -50,7 +52,6 @@
     <Compile Include="Program-parseconf.cs" />
     <Compile Include="ListenConfiguration.cs" />
     <Compile Include="ListenConfiguration-connection.cs" />
-    <Compile Include="BytesBuilder.cs" />
     <Compile Include="ListenConfiguration-connection-est.cs" />
     <Compile Include="ListenConfiguration-connection-traffic.cs" />
   </ItemGroup>
@@ -59,6 +60,19 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInPackage>false</IncludeInPackage>
     </None>
+    <None Include="vinny-socks5-proxy.conf.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInPackage>false</IncludeInPackage>
+    </None>
+    <None Include="trusts.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\trusts\trusts.csproj">
+      <Project>{23169591-2557-40A4-A8F1-46B0992E4E8B}</Project>
+      <Name>trusts</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

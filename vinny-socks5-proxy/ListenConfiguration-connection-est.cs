@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using static vinnysocks5proxy.Helper;
+using static trusts.Helper;
 using cryptoprime;
 using System.Text;
 using System.Diagnostics;
@@ -16,13 +17,16 @@ namespace vinnysocks5proxy
     {
         public partial class Connection: IDisposable
         {
-            protected readonly byte[] ErrorAuthMethodResponse = new byte[] { 0x05, 0xFF };
+            // https://datatracker.ietf.org/doc/html/rfc1928#section-3
+            protected readonly byte[] ErrorAuthMethodResponse = new byte[] { 0x05, 0xFF };      // X'FF' NO ACCEPTABLE METHODS
             protected readonly byte[] NoAuthMethodResponse    = new byte[] { 0x05, 0x00 };
             protected readonly byte[] PwdAuthMethodResponse   = new byte[] { 0x05, 0x02 };
 
+            // https://datatracker.ietf.org/doc/html/rfc1928#section-6
+            // 6.  Replies
             public const int EC_success                       = 0x00;
             public const int EC_general_SOCKS_server_failure  = 0x01;
-            public const int EC_Denied                        = 0x02;
+            public const int EC_Denied                        = 0x02;   // connection not allowed by ruleset
             public const int EC_Network_unreachable           = 0x03;
             public const int EC_Host_unreachable              = 0x04;
             public const int EC_Connection_refused            = 0x05;
@@ -88,11 +92,7 @@ namespace vinnysocks5proxy
                             // Обработка ошибки
                             // Посылаем сообщение о том, что ни один из методов не подходит
                             connection.Send(ErrorAuthMethodResponse);
-    
-                            lock (listen.log)
-                            {
-                                LogErrorForConnection($"The correct authorization method was not found (check user and password in client and in server)", connection, b, available);
-                            }
+                            LogErrorForConnection($"The correct authorization method was not found (check user and password in client and in server)", connection, b, available);
 
                             return;
     
@@ -138,8 +138,7 @@ namespace vinnysocks5proxy
                                     return;
                                 }
 
-                                // TODO: Здесь может быть тайминг-атака; заменить на надёжное сравнение
-                                if (password != listen.users[user])
+                                if (  !SecureCompare(password, listen.users[user])  )
                                 {
                                     LogErrorForConnection($"Incorrect user or password: " + user, connection, null, 0);
                                     connection.Send(new byte[] { 0x01, 0x01 });
@@ -147,7 +146,7 @@ namespace vinnysocks5proxy
                                 }
 
                                 // Успешный вход
-                                LogForConnection($"Success login for user '" + user + "'", connection, 0);
+                                LogForConnection($"Success login for user '" + user + "'", connection, 3);
                                 connection.Send(new byte[] { 0x01, 0x00 });
                             }
     
@@ -256,7 +255,16 @@ namespace vinnysocks5proxy
                                     var domainName = Encoding.ASCII.GetString(bb.getBytes());
                                     LogForConnection("Request for connection to '" + domainName + "'", connection, 2);
                                     
-    
+                                    if (listen.trusts_domain != null)
+                                    {
+                                        if (!listen.trusts_domain.Compliance(domainName))
+                                        {
+                                            LogForConnection($"Domain '{domainName} is denied", connection, 2);
+                                            processResponseForRequest(bb, EC_Denied);
+                                            return;
+                                        }
+                                    }
+
                                     var addresses = Dns.GetHostAddresses(domainName);
     
                                     // Перебираем возможные адреса соединения, если с одним не удалось соединить
@@ -282,7 +290,7 @@ namespace vinnysocks5proxy
                                             else
                                                 anotherError++;
 
-                                            LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 2);
+                                            LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 3);
                                         }
                                     }
                                 }
@@ -334,16 +342,12 @@ namespace vinnysocks5proxy
                         }
                         catch (Exception e)
                         {
-                            lock (listen.log)
-                            {
-                                LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, null, 0);
-                            }
+                            LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, null, 0);
                         }
                         finally
                         {
                             if (!successNegotiation)
                             {
-                                connection.Shutdown(SocketShutdown.Both);
                                 this.Dispose();
                             }
                         }
@@ -353,15 +357,12 @@ namespace vinnysocks5proxy
             
             public void processInvalidProtocolMessage()
             {
-                lock (listen.log)
-                {
-                    listen.Log($"error for connection {connection.RemoteEndPoint.ToString()}", 1);
-                    listen.Log($"Invalid protocol. Socks5 protocol must be setted. Check protocol record in the client", 1);
-                }
+                listen.Log($"error for connection {connection.RemoteEndPoint.ToString()}\r\nInvalid protocol. Socks5 protocol must be setted. Check protocol record in the client", 1);
 
-                this.Dispose();
+                // Dispose уже вызывается в finally-блоке вызывающей функции
+                // this.Dispose();
             }
-            
+
             public void processResponseForRequest(BytesBuilder bb, byte replyCode)
             {
                 bb.addByte(0x05);           // Версия протокола
@@ -412,29 +413,16 @@ namespace vinnysocks5proxy
 
             public void LogErrorForConnection(string Message, Socket connection, byte[] b, int available)
             {
-                if (listen.log == null)
-                    return;
-
-                lock (listen.log)
-                {
-                    if (listen.debug > 4 && b != null)
-                        listen.Log($"error for connection {connectToSocks}" + "\r\n" + Message + "\r\n\r\n" + BitConverter.ToString(b, 0, available > 1024 ? 1024 : available), 1);
-                    else
-                    if (listen.debug > 0)
-                        listen.Log($"error for connection {connectToSocks}" + "\r\n" + Message, 1);
-                }
+                if (listen.debug > 4 && b != null)
+                    listen.Log($"error for connection {connectToSocks}" + "\r\n" + Message + "\r\n\r\n" + BitConverter.ToString(b, 0, available > 1024 ? 1024 : available), 1, trusts.ErrorReporting.LogTypeCode.Error);
+                else
+                if (listen.debug > 0)
+                    listen.Log($"error for connection {connectToSocks}" + "\r\n" + Message, 1, trusts.ErrorReporting.LogTypeCode.Error);
             }
-            
+
             public void LogForConnection(string Message, Socket connection, int debugLevel)
             {
-                if (listen.log == null)
-                    return;
-    
-                if (listen.debug > 0 && listen.debug >= debugLevel)
-                lock (listen.log)
-                {
-                    listen.Log($"{connectToSocks}" + "\r\n" + Message, debugLevel);
-                }
+                listen.Log($"{connectToSocks}" + "\r\n" + Message, debugLevel);
             }
         }
 
@@ -443,7 +431,7 @@ namespace vinnysocks5proxy
             lock (connections)
                 this.connections.Add(new Connection(connection, this));
 
-            Log("new connection from " + connection.RemoteEndPoint.ToString(), 4);
+            Log("new connection from " + connection.RemoteEndPoint.ToString() + "\r\nCount of connections with the listener: " + this.connections.Count, 4);
         }
     }
 }
