@@ -101,6 +101,7 @@ namespace trusts
                                 
 
                             break;
+
                         case "end":
                                 if (currentObject == null)
                                 {
@@ -110,6 +111,32 @@ namespace trusts
 
                                 currentObject = null;
                             break;
+
+                        case "cmp":
+                        case "compare":
+                                if (currentObject == null)
+                                {
+                                    logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                    return null;
+                                }
+                            break;
+
+                        case "command":
+                                if (currentObject == null)
+                                {
+                                    logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                    return null;
+                                }
+                            break;
+
+                        case "call":
+                                if (currentObject == null)
+                                {
+                                    logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                    return null;
+                                }
+                            break;
+
                         default:
                             logger.Log($"TrustsObject.Parse error at line {i+1}. Incorrect command '{tLine}' ('{cmd}'). Correct example: ':new:Name'", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
                             return null;

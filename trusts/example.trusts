@@ -1,7 +1,7 @@
 ﻿
 :new:entireDomains
 
-:exactly:d[0:2]
+:cmp:exactly:d[0:2]
 mail.yandex.ru
 disk.yandex.ru
 
@@ -12,24 +12,24 @@ disk.yandex.ru
 :new:1
 
 
-:exactly:d[1]
+:cmp:exactly:d[1]
 yandex
 
-:exactly:d[0]
+:cmp:exactly:d[0]
 com
 net
 
-# :exactly:d[0:1]
+# :cmp:exactly:d[0:1]
 # yandex.com
 # yandex.net
 
 
-# :exactly:d[:]
-# :contains:d[0:1]
-# :regex:d[0:1]
-# :startswith:d[1]
-# :endsswith:d[1]
-# :regex:d[1*] (проходит по всем поддоменам, кроме первого уровня [кроме зон])
+# :cmp:exactly:d[:]
+# :cmp:contains:d[0:1]
+# :cmp:regex:d[0:1]
+# :cmp:startswith:d[1]
+# :cmp:endswith:d[1]
+# :cmp:regex:d[1*] (проходит по всем поддоменам, кроме первого уровня [кроме зон])
 
 # :command:reject
 # :command:accept
