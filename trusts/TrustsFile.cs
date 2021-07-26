@@ -64,6 +64,61 @@ namespace trusts
         public TrustsObject Parse(string[] TrustFileLines)
         {
             var root = new TrustsObject("", null, logger);
+            
+            int countOfBlocks = 0;
+
+            TrustsObject currentObject  = null;
+            TrustsObject currentCommand = null;
+            for (int i = 0; i < TrustFileLines.Length; i++)
+            {
+                var rawLine = TrustFileLines[i];
+                var tLine   = rawLine.Trim();
+                
+                if (tLine.Length <= 0 || tLine.StartsWith("#"))
+                    continue;
+                
+                if (tLine.StartsWith(":"))
+                {
+                    var nLine = tLine.Substring(startIndex: 1).Split(new string[] {":"}, 2, StringSplitOptions.RemoveEmptyEntries);
+                    if (nLine.Length != 2)
+                    {
+                        logger.Log($"TrustsObject.Parse error at line {i+1}. Incorrect command '{tLine}'. Correct example: ':new:Name'", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                        return null;
+                    }
+
+                    var cmd = nLine[0].Trim().ToLowerInvariant();
+                    switch (cmd)
+                    {
+                        case "new":
+                                if (currentObject != null)
+                                {
+                                    logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered 'new' command, but a current block is not ended. End the block with a command ':end:BlockName'\r\nNested blocks are not allowed", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                    return null;
+                                }
+
+                                countOfBlocks++;
+                                currentObject = new TrustsObject(nLine[1].Trim(), root);
+                                
+
+                            break;
+                        case "end":
+                                if (currentObject == null)
+                                {
+                                    logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered 'end' command, but an current block is missing. Start block with command ':new:BlockName'", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                    return null;
+                                }
+
+                                currentObject = null;
+                            break;
+                        default:
+                            logger.Log($"TrustsObject.Parse error at line {i+1}. Incorrect command '{tLine}' ('{cmd}'). Correct example: ':new:Name'", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                            return null;
+                    }
+                }
+            }
+
+            logger.Log($"TrustsObject.Parse: a success end. {countOfBlocks} blocks has been parsed", "", ErrorReporting.LogTypeCode.Usually, "trustsFile.parse.message");
+
             return root;
         }
 

@@ -79,7 +79,7 @@ namespace vinnysocks5proxy
         {
             try
             {
-                Log($"Listening starting", 4, ErrorReporting.LogTypeCode.Usually);
+                Log($"Listening starting...", 4, ErrorReporting.LogTypeCode.Usually);
                 listen_socket?.Dispose();
 
                 listen_socket = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
