@@ -9,7 +9,7 @@ https://translate.yandex.ru/?lang=ru-en
 Socks5 proxy for host in home usage.
 Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework in Windows ( https://dotnet.microsoft.com/download )
 
-Complete functionality:
+Completed functionality:
 * Login and password authentication
 * IPv4 addresses restriction (if needed)
 
@@ -21,6 +21,7 @@ Example of configuration
 Русский
 
 Socks5 прокси для домашнего использования на своей машине.
+
 Требует Mono на Linux ( https://www.mono-project.com/ ) и .NET Framework на Windows ( https://dotnet.microsoft.com/download )
 
 Законченная функциональность
