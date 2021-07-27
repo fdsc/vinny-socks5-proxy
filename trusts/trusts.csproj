@@ -45,9 +45,13 @@
     <Compile Include="BytesBuilder.cs" />
     <Compile Include="Error-Reporting-SimpleFile.cs" />
     <Compile Include="TrustsObject-command.cs" />
+    <Compile Include="Commands\TrustsObject-command.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="example.trusts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Commands\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
