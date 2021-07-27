@@ -10,7 +10,8 @@ Socks5 proxy for host in home usage.
 Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework in Windows ( https://dotnet.microsoft.com/download )
 
 Completed functionality:
-* Login and password authentication
+* Can listen on multiple ports
+* Login and password authentication (need restart server for user add)
 * IPv4 addresses restriction (if needed)
 
 Example of configuration
@@ -25,7 +26,8 @@ Socks5 прокси для домашнего использования на с
 Требует Mono на Linux ( https://www.mono-project.com/ ) и .NET Framework на Windows ( https://dotnet.microsoft.com/download )
 
 Законченная функциональность
-* Аутентификация по логину и паролю
+* Может прослушивать несколько портов
+* Аутентификация по логину и паролю (для добавления пользователя требуется перезапуск сервера)
 * Запрет на пересылку IP-адресов, если необходимо
 
 Пример конфигурации
