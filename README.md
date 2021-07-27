@@ -8,12 +8,12 @@ https://translate.yandex.ru/?lang=ru-en
 
 Socks5 proxy for host in home usage.
 
-Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework in Windows ( https://dotnet.microsoft.com/download )
+Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework 4.8 in Windows ( https://dotnet.microsoft.com/download )
 
 Completed functionality:
 * Can listen on multiple ports
 * Login and password authentication (need restart server for user add)
-* IPv4 addresses restriction (if needed)
+* Admin can denied IP addresses (only domain names allowed; carefully, perhaps the function can be bypassed)
 
 Disadvantages:
 * Creates two system threads for an each client connection (load on the system; cannot handle many connections)
@@ -27,12 +27,12 @@ Example of configuration
 
 Socks5 прокси для домашнего использования на своей машине.
 
-Требует Mono на Linux ( https://www.mono-project.com/ ) и .NET Framework на Windows ( https://dotnet.microsoft.com/download )
+Требует Mono на Linux ( https://www.mono-project.com/ ) и .NET Framework 4.8 на Windows ( https://dotnet.microsoft.com/download )
 
 Законченная функциональность
 * Может прослушивать несколько портов
 * Аутентификация по логину и паролю (для добавления пользователя требуется перезапуск сервера)
-* Запрет на пересылку IP-адресов, если необходимо
+* Администратор может запретить пересылку данных по IP-адресам (оставив только доменные имена; осторожно, возможно, данное ограничение можно обойти)
 
 Недостатки:
 * На каждое клиентское соединение создаёт два системных потока (нагрузка на систему; не может обрабатывать много соединений)
