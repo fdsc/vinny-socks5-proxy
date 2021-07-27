@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using static trusts.TrustsObject;
 
 namespace trusts
 {
@@ -64,11 +65,11 @@ namespace trusts
         public TrustsObject Parse(string[] TrustFileLines)
         {
             var root = new TrustsObject("", null, logger);
-            
+
             int countOfBlocks = 0;
 
             TrustsObject currentObject  = null;
-            TrustsObject currentCommand = null;
+            Command      currentCommand = null;
             for (int i = 0; i < TrustFileLines.Length; i++)
             {
                 var rawLine = TrustFileLines[i];
@@ -87,6 +88,9 @@ namespace trusts
                     }
 
                     var cmd = nLine[0].Trim().ToLowerInvariant();
+                    if (cmd.StartsWith("::", StringComparison.InvariantCulture))       // Смотрим на экранирующий двоеточие символ
+                        cmd = cmd.Substring(startIndex: 2).Trim();
+
                     switch (cmd)
                     {
                         case "new":
@@ -98,7 +102,6 @@ namespace trusts
 
                                 countOfBlocks++;
                                 currentObject = new TrustsObject(nLine[1].Trim(), root);
-                                
 
                             break;
 
@@ -112,6 +115,7 @@ namespace trusts
                                 currentObject = null;
                             break;
 
+                        // Копия команд в ParseSubCommand
                         case "cmp":
                         case "compare":
                                 if (currentObject == null)
@@ -119,6 +123,27 @@ namespace trusts
                                     logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
                                     return null;
                                 }
+
+                                bool isNegative = false;
+                                if (nLine[1].ToLowerInvariant().StartsWith("not:"))
+                                {
+                                    nLine[1]   = nLine[1].Substring(startIndex: 4);
+                                    isNegative = true;
+                                }
+
+                                currentCommand = new Command("compare", nLine[1], isNegative, currentObject);
+
+                                if (!currentCommand.syntaxError)
+                                    currentCommand.SubCommand = new Compare(currentCommand);
+
+                                if (currentCommand.syntaxError)
+                                {
+                                    logger.Log($"TrustsObject.Parse error at line {i+1}. In '{cmd}' command the syntax error found", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                    return null;
+                                }
+
+                                // logger.Log($"Parsed command '{currentCommand.Name}' with subcommand '{currentCommand.SubCommand.ToString()}'", "", ErrorReporting.LogTypeCode.Usually, "trustsFile.parse");
+                                currentObject.commands.Add(currentCommand);
                             break;
 
                         case "command":

@@ -5,16 +5,17 @@ using System.Collections.Generic;
 namespace trusts
 {
     /// <summary>Объект иерархии доверия</summary>
-    public class TrustsObject
+    public partial class TrustsObject
     {                                                               /// <summary>Корень настроек. Это один объект на всех, который хранит полный список объектов в rootCollection</summary>
         public readonly TrustsObject   root;                        /// <summary>Уникальное имя объекта</summary>
         public readonly string         Name   = null;               /// <summary>Объект, определяющий политику логирования. Один на всю иерархию</summary>
         public readonly ErrorReporting logger = null;
-                                                                                                                                /// <summary>Потомки этого объекта</summary>
-        public readonly BlockingCollection  <string>               childs         = new BlockingCollection<string>();           /// <summary>Полная коллекция объектов иерархии</summary>
-        public readonly ConcurrentDictionary<string, TrustsObject> rootCollection = null;
 
-        /// <summary>Создаёт объект иерархии настроек</summary>
+        /// <summary>Полная коллекция объектов иерархии</summary>
+        public readonly ConcurrentDictionary<string, TrustsObject> rootCollection = null;           /// <summary>Команды блока</summary>
+        public readonly List<Command> commands = new List<Command>(16);
+
+        /// <summary>Создаёт объект иерархии настроек. Добавляет этот объект в rootCollection</summary>
         /// <param name="Name">Уникальное для иерархии имя объекта</param>
         /// <param name="root">Корневой объект иерархии</param>
         /// <param name="logger">Объект, определяющий политику логирования (может быть null)</param>
@@ -47,7 +48,7 @@ namespace trusts
 
             if (!this.root.rootCollection.TryAdd(this.Name, this))
             {
-                this.logger.Log($"TrustsObject constructor: name of object not unique: {Name}", "", ErrorReporting.LogTypeCode.Error, "trustsFile.TrustsObject");
+                this.logger.Log($"TrustsObject constructor: name of object not unique: {Name}", "", ErrorReporting.LogTypeCode.Error, "trustsFile.TrustsObject;trustsFile.parse");
                 throw new ArgumentException();
             }
         }

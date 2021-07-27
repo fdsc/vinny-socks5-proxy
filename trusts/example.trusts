@@ -1,4 +1,11 @@
 ﻿
+:new:default
+
+:command:reject:0
+
+:end:default
+
+
 :new:entireDomains
 
 :cmp:exactly:d[0:2]
@@ -18,10 +25,12 @@ yandex
 :cmp:exactly:d[0]
 com
 net
+ru
 
 # :cmp:exactly:d[0:1]
 # yandex.com
 # yandex.net
+# yandex.ru
 
 
 # :cmp:exactly:d[:]
@@ -31,10 +40,10 @@ net
 # :cmp:endswith:d[1]
 # :cmp:regex:d[1*] (проходит по всем поддоменам, кроме первого уровня [кроме зон])
 
-# :command:reject
-# :command:accept
-# :command:false
-# :command:true
+# :command:reject:1
+# :command:accept:1
+# :command:return:false
+# :command:return:true
 
 :call:2
 # :jmp:2
