@@ -1,5 +1,10 @@
 ﻿:new:entireDomains
 
+:cmp:exactly:d[:]
+:cmp:exactly:d[1:]
+:cmp:exactly:d[:1]
+:cmp:exactly:d[1]
+
 :cmp:exactly:d[0:2]
 mail.yandex.ru
 disk.yandex.ru
