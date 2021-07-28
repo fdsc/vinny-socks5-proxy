@@ -44,8 +44,11 @@
     <Compile Include="Helper.cs" />
     <Compile Include="BytesBuilder.cs" />
     <Compile Include="Error-Reporting-SimpleFile.cs" />
-    <Compile Include="TrustsObject-command.cs" />
+    <Compile Include="TrustsObject-Directive.cs" />
     <Compile Include="Commands\TrustsObject-command.cs" />
+    <Compile Include="Commands\TrustsObject-compare.cs" />
+    <Compile Include="Commands\Priority.cs" />
+    <Compile Include="Commands\TrustsObject-transitions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="example.trusts" />

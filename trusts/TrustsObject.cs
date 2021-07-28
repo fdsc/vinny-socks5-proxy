@@ -11,9 +11,9 @@ namespace trusts
         public readonly string         Name   = null;               /// <summary>Объект, определяющий политику логирования. Один на всю иерархию</summary>
         public readonly ErrorReporting logger = null;
 
-        /// <summary>Полная коллекция объектов иерархии</summary>
-        public readonly ConcurrentDictionary<string, TrustsObject> rootCollection = null;           /// <summary>Команды блока</summary>
-        public readonly List<Command> commands = new List<Command>(16);
+        /// <summary>Полная коллекция объектов иерархии. Это коллекция блоков</summary>
+        public readonly ConcurrentDictionary<string, TrustsObject> rootCollection = null;           /// <summary>Команды блока. У корневого блока команд нет</summary>
+        public readonly List<Directive> commands = new List<Directive>();
 
         /// <summary>Создаёт объект иерархии настроек. Добавляет этот объект в rootCollection</summary>
         /// <param name="Name">Уникальное для иерархии имя объекта</param>
@@ -59,6 +59,40 @@ namespace trusts
         public bool Compliance(string domainName)
         {
             return true; // TODO: Ничего не сделано
+        }
+
+        /// <summary>Производит проверку того, что в переходах всегда указаны верные имена блоков для перехода</summary>
+        /// <returns><c>true</c>, если файл имеет корректные имена переходов, <c>false</c> если файл некорректен.</returns>
+        public bool checkTransitionsParameters()
+        {
+            // Проходим по всем блокам
+            foreach (var block in rootCollection)
+            {
+                // Проходим по всем командам блоков
+                foreach (var cmd in block.Value.commands)
+                {
+                    var transition = cmd.SubCommand as Transition;
+                    if (transition == null || transition.Type == Transition.TransitionType.error || transition.Type == Transition.TransitionType.@return)
+                        continue;
+
+                    // Рекурсия недопустима
+                    var name = cmd.Parameter;
+                    if (name == block.Key)
+                    {
+                        logger.Log($"Error transition: recursion not allowed {cmd.ToString()}", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                        return false;
+                    }
+
+                    if (rootCollection.ContainsKey(name))
+                        continue;
+
+                    logger.Log($"Error transition: the block for transition is not found for command {cmd.ToString()}", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

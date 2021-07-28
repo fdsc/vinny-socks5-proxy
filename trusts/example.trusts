@@ -42,8 +42,8 @@ ru
 
 # :command:reject:1
 # :command:accept:1
-# :command:return:false
-# :command:return:true
+# :ret:false
+# :ret:true
 
 :call:2
 # :jmp:2

@@ -145,7 +145,7 @@ namespace vinnysocks5proxy
             listen_socket?.Dispose();
             listen_socket = null;
 
-            Log($"Listening ended", 0);
+            Log($"Listening ended", 0, ErrorReporting.LogTypeCode.Changed);
         }
 
         public int CompareTo(ListenConfiguration other)

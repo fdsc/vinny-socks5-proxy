@@ -9,7 +9,10 @@
 mail.yandex.ru
 disk.yandex.ru
 
-:command:accept
+# :command:accept
+# :call:entireDomains
+:command:accept:0.1.2.3.0
 
 :end:entireDomains
 
+# dddd
