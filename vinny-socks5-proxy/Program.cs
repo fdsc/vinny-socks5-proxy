@@ -60,12 +60,19 @@ namespace vinnysocks5proxy
                 AcceptThread.IsBackground = true;
                 AcceptThread.Start();
 
+                var timer = new System.Timers.Timer();
+                timer.Interval  = 1000;
+                timer.AutoReset = true;
+                timer.Elapsed += Timer_Elapsed;
+                timer.Start();
+
                 do
                 {
                     ExitWaitEvent.Reset();
                     ExitWaitEvent.WaitOne();
                 }
                 while (!toTerminate);
+                timer.Stop();
             }
             catch (Exception e)
             {
@@ -99,6 +106,39 @@ namespace vinnysocks5proxy
             TerminatedEvent.Set();
 
             return isError ? 1000 : 0;
+        }
+
+        public static volatile int TimeCounter = 0;
+        static void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (toTerminate)
+                return;
+
+            lock (ExitWaitEvent)
+            {
+                TimeCounter++;
+
+                // Считаем остаток от деления на 128
+                var tm = TimeCounter & 0x7F;
+                if (tm == 0)    // Каждые две минуты, примерно
+                {
+                    foreach (var ls in listens)
+                    {
+                        var cnt = ls.connections.Count;
+                        foreach (var connection in ls.connections)
+                        {
+                            try
+                            {
+                                connection.CheckTimeoutAndClose(TimeCounter);
+                            }
+                            catch
+                            {}
+                        }
+
+                        ls.Log("Watchdog timer: Count of connections in the listener " + ls.connections.Count, (cnt != ls.connections.Count || ls.connections.Count > 0) ? 2 : 3, trusts.ErrorReporting.LogTypeCode.Usually);
+                    }
+                }
+            }
         }
 
         /// <summary>Устанавливаем флаг и событие для сообщения всем о том, что мы должны завершиться</summary>

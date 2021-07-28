@@ -21,30 +21,57 @@ namespace vinnysocks5proxy
             public long   SizeOfTransferredDataTo   = 0;
             public long   SizeOfTransferredDataFrom = 0;
             public readonly ListenConfiguration listen = null;
+            
+            public bool   isEstablished = false;
+
+            /// <summary>Время последней активности по счётчику MainClass.TimeCounter</summary>
+            public volatile int LastActiveConnectionTimerCounter = 0;
 
             public int waitAvailableBytes(int minBytes = 1, int timeout = 100, int countOfTimeouts = 100)
             {
                 int available = 0;
-                lock (connection)
+                // lock (connection)
                 {
-                        available = connection.Available;
-                    int count     = 0;
+                    available = connection.Available;
+                    int count = 0;
                     while (available < minBytes)
                     {
-                        Monitor.Wait(connection, timeout);
-    
+                        try { lock (connection) Monitor.Wait(connection, timeout); } catch { }
+
                         available = connection.Available;
-    
+
+                        count++;
                         if (count > countOfTimeouts)
                         {
-                            listen.Log($"error for connection {connection.RemoteEndPoint.ToString()}: not enought bytes; available {available}", 0);
+                            listen.Log($"error for connection {connectToSocks}: not enought bytes; available {available}", 0);
                             // this.Dispose();
                             return 0;
                         }
                     }
                 }
 
+                SetLastActiveConnectionTimerCounter();
+
                 return available;
+            }
+
+            private void SetLastActiveConnectionTimerCounter()
+            {
+                LastActiveConnectionTimerCounter = MainClass.TimeCounter;
+            }
+
+            public void CheckTimeoutAndClose(int TimerCounter)
+            {
+                var timeout = Math.Max(listen.TimeoutReceiveFromClient, Math.Max(listen.TimeoutReceiveFromTarget, Math.Max(listen.TimeoutSendToClient, listen.TimeoutSendToTarget) ));
+                if (!isEstablished)
+                if (timeout > 120_000)
+                    timeout = 120_000;
+
+                if (TimerCounter - LastActiveConnectionTimerCounter > (timeout / 1000))
+                {
+                    LogForConnection($"Connection closed by watchdog timer", connection, 3);
+                    Dispose();
+                }
             }
 
             public void Dispose()
@@ -87,6 +114,8 @@ namespace vinnysocks5proxy
                     LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo.ToString("N0")}, received bytes {SizeOfTransferredDataFrom.ToString("N0")}; time {start.Elapsed}; Count of connections in the listener {listen.connections.Count}", connection, 2);
                     isDisposed = true;
                 }
+
+                GC.Collect();
             }
         }
     }

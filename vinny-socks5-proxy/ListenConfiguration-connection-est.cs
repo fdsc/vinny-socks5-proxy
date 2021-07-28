@@ -50,7 +50,8 @@ namespace vinnysocks5proxy
                 this.connection = connection;
                 this.listen     = listen;
 
-                connection.SendBufferSize = BufferSizeForConnection;
+                connection.SendBufferSize    = BufferSizeForConnection;
+                connection.ReceiveBufferSize = BufferSizeForConnection;
 
                 connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
                 start.Start();
@@ -239,10 +240,11 @@ namespace vinnysocks5proxy
                                     var ConnectToIP = new IPAddress(bb.getBytes());
                                     connectionTo    = new Socket(ConnectToIP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                                     var ipe         = new IPEndPoint(ConnectToIP, ConnectToPort);
-                                    
+                                    connectToSocks += "\t(" + ipe + ")";
+
                                     try
                                     {
-                                        LogForConnection("Request for connection to " + ipe, connection, 2);
+                                        LogForConnection("Request for connection to " + ipe, connection, 3);
                                         connectionTo.Connect(ipe);
                                         connected = true;
                                     }
@@ -262,8 +264,10 @@ namespace vinnysocks5proxy
                                     }
     
                                     bb.addWithCopy(b, -1, 5, 5 + b[4]);
-                                    var domainName = Encoding.ASCII.GetString(bb.getBytes());
-                                    LogForConnection("Request for connection to '" + domainName + "'", connection, 2);
+                                    var domainName  = Encoding.ASCII.GetString(bb.getBytes());
+                                    connectToSocks = "(" + domainName + ")\t" + connectToSocks;
+
+                                    LogForConnection("Request for connection to '" + domainName + "'", connection, 3);
                                     
                                     if (listen.trusts_domain != null)
                                     {
@@ -282,12 +286,13 @@ namespace vinnysocks5proxy
                                     {
                                         connectionTo    = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                                         var ipe         = new IPEndPoint(addr, ConnectToPort);
-                                        
+
                                         LogForConnection("Try connection to " + ipe, connection, 4);
                                         try
                                         {
                                             connectionTo.Connect(ipe);
                                             connected = true;
+                                            connectToSocks += "\t" + connectionTo.LocalEndPoint + " -> " + ipe + "";
                                             break;
                                         }
                                         catch (SocketException e)

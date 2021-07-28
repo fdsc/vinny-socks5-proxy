@@ -70,6 +70,8 @@ namespace vinnysocks5proxy
                         return;
                     }
 
+                    SetLastActiveConnectionTimerCounter();
+
                     int sended = 0;
     
                     sended = connectionTo.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
@@ -96,7 +98,7 @@ namespace vinnysocks5proxy
                     return;
                 }
             }
-            
+
             public void setAcyncReceiveFrom()
             {
                 if (doTerminate)
@@ -109,8 +111,8 @@ namespace vinnysocks5proxy
                 {
                     var sa = new SocketAsyncEventArgs();
                     sa.Completed += ReceiveAsyncFrom;
-                    sa.SetBuffer(BytesTo, 0, BytesTo.Length);
-    
+                    sa.SetBuffer(BytesFrom, 0, BytesTo.Length);
+
                     if (!connectionTo.ReceiveAsync(sa))
                         ReceiveAsyncFrom(this, sa);
                 }
@@ -151,7 +153,9 @@ namespace vinnysocks5proxy
                         Dispose();
                         return;
                     }
-    
+
+                    SetLastActiveConnectionTimerCounter();
+
                     int sended = 0;
     
                     sended = connection.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
@@ -181,6 +185,7 @@ namespace vinnysocks5proxy
 
             public void doProcessTraffic()
             {
+                isEstablished = true;
                 LogForConnection($"Starting connections for user data for {connectionTo.LocalEndPoint} -> {connectionTo.RemoteEndPoint}", connection, 2);
 
                 if (listen.TimeoutSendToClient > 0)
