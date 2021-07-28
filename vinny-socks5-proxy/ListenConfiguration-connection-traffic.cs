@@ -15,160 +15,169 @@ namespace vinnysocks5proxy
     {
         public partial class Connection: IDisposable
         {
+            public void setAcyncReceiveTo()
+            {
+                if (doTerminate)
+                {
+                    Dispose();
+                    return;
+                }
+
+                try
+                {
+                    var sa = new SocketAsyncEventArgs();
+                    sa.Completed += ReceiveAsyncTo;
+                    sa.SetBuffer(BytesTo, 0, BytesTo.Length);
+    
+                    if (!connection.ReceiveAsync(sa))
+                        ReceiveAsyncTo(this, sa);
+                }
+                catch (SocketException e)
+                {
+                    if (!doTerminate)
+                        LogForConnection(e.Message, connection, 3);
+
+                    Dispose();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!doTerminate)
+                        LogForConnection(e.Message + "\r\n" + e.StackTrace, connection, 2);
+
+                    Dispose();
+                    return;
+                }
+            }
+
+            public void ReceiveAsyncTo(object sender, SocketAsyncEventArgs e)
+            {
+                if (doTerminate)
+                {
+                    Dispose();
+                    return;
+                }
+
+                try
+                {
+                    if (e.SocketError != SocketError.Success)
+                        LogForConnection("Socket error " + e.SocketError, connection, 3);
+                        
+                    if (e.BytesTransferred == 0)
+                    {
+                        LogForConnection("The socket did not transmit any data and will be shutdown", connection, 3);
+                        Dispose();
+                        return;
+                    }
+    
+                    int sended = 0;
+    
+                    sended = connectionTo.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
+                    SizeOfTransferredDataTo += sended;
+    
+                    setAcyncReceiveTo();
+                    if (listen.debug > 4)
+                    LogForConnection("Transfer data to, size " + sended, connection, 5);
+                }
+                catch (SocketException ex)
+                {
+                    if (!doTerminate)
+                        LogForConnection(ex.Message, connection, 3);
+
+                    Dispose();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    if (!doTerminate)
+                        LogForConnection(ex.Message + "\r\n" + ex.StackTrace, connection, 2);
+
+                    Dispose();
+                    return;
+                }
+            }
+            
+            public void setAcyncReceiveFrom()
+            {
+                if (doTerminate)
+                {
+                    Dispose();
+                    return;
+                }
+
+                try
+                {
+                    var sa = new SocketAsyncEventArgs();
+                    sa.Completed += ReceiveAsyncFrom;
+                    sa.SetBuffer(BytesTo, 0, BytesTo.Length);
+    
+                    if (!connectionTo.ReceiveAsync(sa))
+                        ReceiveAsyncFrom(this, sa);
+                }
+                catch (SocketException e)
+                {
+                    if (!doTerminate)
+                        LogForConnection(e.Message, connection, 3);
+
+                    Dispose();
+                    return;
+                }
+                catch (Exception e)
+                {
+                    if (!doTerminate)
+                        LogForConnection(e.Message + "\r\n" + e.StackTrace, connection, 2);
+
+                    Dispose();
+                    return;
+                }
+            }
+
+            public void ReceiveAsyncFrom(object sender, SocketAsyncEventArgs e)
+            {
+                if (doTerminate)
+                {
+                    Dispose();
+                    return;
+                }
+
+                try
+                {
+                    if (e.SocketError != SocketError.Success)
+                        LogForConnection("Socket error " + e.SocketError, connection, 3);
+    
+                    int sended = 0;
+    
+                    sended = connection.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
+                    SizeOfTransferredDataFrom += sended;
+    
+                    setAcyncReceiveFrom();
+                    if (listen.debug > 4)
+                    LogForConnection("Transfer data to, size " + sended, connection, 5);
+                }
+                catch (SocketException ex)
+                {
+                    if (!doTerminate)
+                        LogForConnection(ex.Message, connection, 3);
+
+                    Dispose();
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    if (!doTerminate)
+                        LogForConnection(ex.Message + "\r\n" + ex.StackTrace, connection, 2);
+
+                    Dispose();
+                    return;
+                }
+            }
+
             public void doProcessTraffic()
             {
                 LogForConnection($"Starting connections for user data for {connectionTo.LocalEndPoint} -> {connectionTo.RemoteEndPoint}", connection, 2);
 
-                var clientData = new Thread
-                (
-                    delegate ()
-                    {
-                        var b = new byte[65536];
-                        int available = 0;
-                        int sended    = 0;
-
-                        do
-                        {
-                            try
-                            {
-                                if (!connection.Connected || !connectionTo.Connected)
-                                    break;
-
-                                // Ждём данные от клиента
-                                waitBytes(connection, b, ref available, listen.SleepTimeTo, listen.SleepTimeToBytes);
-
-                                // Посылаем даные клиента на удалённый сервер
-                                if (available > 0 && !doTerminate)
-                                {
-                                    sended = connectionTo.Send(b, available, SocketFlags.None);
-                                    SizeOfTransferredDataTo += sended;
-
-                                    if (listen.debug > 4)
-                                    LogForConnection("Transfer data to, size " + sended, connection, 5);
-                                }
-                            }
-                            catch (ObjectDisposedException)
-                            {
-                                break;
-                            }
-                            catch (SocketException)
-                            {
-                                break;
-                            }
-                            catch (Exception e)
-                            {
-                                if (doTerminate)
-                                    break;
-
-                                try
-                                {
-                                    LogForConnection("Error with client data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection, 0);
-                                    if (!connection.Connected)
-                                        break;
-                                }
-                                catch
-                                {
-                                    LogForConnection("Error with client data for ???\r\n" + e.Message, connection, 0);
-                                    break;
-                                }
-                            }
-                        }
-                        while (!doTerminate);
-
-                        doTerminate = true;
-                        lock (this)
-                        {
-                            connectionTo?.Shutdown(SocketShutdown.Both);
-                            connectionTo?.Close();
-                        }
-	                }
-                );
-                clientData.IsBackground = true;
-                clientData.Start();
-
-                var serverData = new Thread
-                (
-                    delegate ()
-                    {
-                        var b = new byte[65536];
-                        int available = 0;
-                        int sended    = 0;
-
-                        do
-                        {
-                            try
-                            {
-                                if (!connection.Connected || !connectionTo.Connected)
-                                    break;
-
-                                // Ждём данные от клиента
-                                waitBytes(connectionTo, b, ref available, listen.SleepTimeFrom, listen.SleepTimeFromBytes);
-
-                                // Посылаем даные клиента на удалённый сервер
-                                if (available > 0 && !doTerminate)
-                                {
-                                    sended = connection.Send(b, available, SocketFlags.None);
-                                    SizeOfTransferredDataFrom += sended;
-
-                                    if (listen.debug > 4)
-                                    LogForConnection("Transfer data from, size " + sended, connection, 5);
-                                }
-                            }
-                            catch (ObjectDisposedException)
-                            {
-                                break;
-                            }
-                            catch (SocketException)
-                            {
-                                break;
-                            }
-                            catch (Exception e)
-                            {
-                                if (doTerminate)
-                                    break;
-                                   
-                                try
-                                {
-                                    LogForConnection("Error with remote server data for " + connectionTo.RemoteEndPoint + "\r\n" + e.Message, connection, 0);
-                                    if (!connection.Connected)
-                                        break;
-                                }
-                                catch
-                                {
-                                    LogForConnection("Error with remote server data for ???\r\n" + e.Message, connection, 0);
-                                }
-                            }
-                        }
-                        while (!doTerminate);
-
-                        lock (this)
-                        {
-                            Dispose();
-                        }
-                    }
-                );
-                serverData.IsBackground = true;
-                serverData.Start();
-            }
-            
-            public void waitBytes(Socket connection, byte[] b, ref int available, int SleepTime, int SleepTimeBytes)
-            {
-                var offset   = 0;
-                var recieved = 0;
-                available = 0;
-                do
-                {
-                    if (offset > 0 && listen.debug > 4)
-                        LogForConnection($"sleeped / bytes {offset}", connection, 5);
-
-                    recieved   = connection.Receive(b, offset, b.Length - offset, SocketFlags.None);
-                    offset    += recieved;
-                    available += recieved;
-
-                    if (SleepTime >= 0 && connection.Available == 0 && offset < SleepTimeBytes)
-                        Thread.Sleep(SleepTime);
-                }
-                while (connection.Available > 0 && offset < SleepTimeBytes);
+                setAcyncReceiveTo();
+                setAcyncReceiveFrom();
             }
         }
     }

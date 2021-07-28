@@ -36,11 +36,21 @@ namespace vinnysocks5proxy
             public string connectToSocks = "";
             public Stopwatch start = new Stopwatch();
 
+            protected    byte[] BytesTo   = new byte[BufferSizeForTo];
+            protected    byte[] BytesFrom = new byte[BufferSizeForTo];
+
+            public const int    BufferSizeForConnection = 65536;
+            public const int    BufferSizeForTo         = 65536;
+            public const int    BufferSizeForFrom       = 65536;
+            public const int    MaxErrorCount           = 6;
+
             // Установка нового соединения клиента с прокси
             public Connection(Socket connection, ListenConfiguration listen)
             {
                 this.connection = connection;
                 this.listen     = listen;
+
+                connection.SendBufferSize = BufferSizeForConnection;
 
                 connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
                 start.Start();
@@ -381,6 +391,20 @@ namespace vinnysocks5proxy
                      o  X'09' to X'FF' unassigned
                  */
                 bb.addByte(0x00);
+                // Если сообщаем об ошибке
+                if (replyCode != 0)
+                {
+                    bb.addByte(0x01);   // ATYP = ipv4
+
+                    bb.addByte(0x00);   // IP-адрес
+                    bb.addByte(0x00);
+                    bb.addByte(0x00);
+                    bb.addByte(0x00);
+
+                    bb.addByte(0x00);   // Порт
+                    bb.addByte(0x00);
+                }
+                else
                 if (connection.LocalEndPoint.AddressFamily == AddressFamily.InterNetwork)
                 {
                     bb.addByte(0x01);   // ATYP = ipv4

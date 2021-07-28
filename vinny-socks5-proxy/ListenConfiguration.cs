@@ -26,11 +26,7 @@ namespace vinnysocks5proxy
         public bool namesGranted_ipv4   = false;
         public bool namesGranted_ipv6   = false;
         public bool namesGranted_domain = false;
-        public int  debug               = 0;    // Это для того, чтобы в лог выдавать чуть больше информации
-        public int  SleepTimeTo         = -1;
-        public int  SleepTimeFrom       = -1;
-        public int  SleepTimeToBytes    = 0;
-        public int  SleepTimeFromBytes  = 0;
+        public int  debug               = 0;        // Это для того, чтобы в лог выдавать чуть больше информации
         public bool Incorrect           = false;    // Если true, значит больше не будет прослушиваться
 
         public string ListenAddressForLog = "";

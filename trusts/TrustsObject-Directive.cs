@@ -31,6 +31,8 @@ namespace trusts
                 this.OwnObject  = own;
             }
 
+            /// <summary>Возвращает представление команды</summary>
+            /// <returns>Строковое представление команды для отладки. Для любых переходов даёт transition вместо типа перехода</returns>
             public override string ToString()
             {
                 if (isNegative)

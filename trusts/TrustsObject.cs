@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using trusts.Commands;
 
 namespace trusts
 {
@@ -58,6 +59,11 @@ namespace trusts
         /// <param name="domainName">Проверяемое доменное имя</param>
         public bool Compliance(string domainName)
         {
+            var commandType = Command.CommandType.reject;
+            var priority    = new Priority(null);
+
+            
+
             return true; // TODO: Ничего не сделано
         }
 
@@ -65,6 +71,12 @@ namespace trusts
         /// <returns><c>true</c>, если файл имеет корректные имена переходов, <c>false</c> если файл некорректен.</returns>
         public bool checkTransitionsParameters()
         {
+            if (!rootCollection.ContainsKey("root"))
+            {
+                logger.Log($"Error transition: trusts file must contains 'root' block - the program only checks it\r\nThe remaining blocks are checked only if there is a transition to them", "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                return false;
+            }
+
             // Проходим по всем блокам
             foreach (var block in rootCollection)
             {

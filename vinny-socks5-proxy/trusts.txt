@@ -1,4 +1,8 @@
-﻿:new:entireDomains
+﻿:new:root
+
+:end:root
+
+:new:entireDomains
 
 :cmp:exactly:d[:]
 :cmp:exactly:d[1:]
