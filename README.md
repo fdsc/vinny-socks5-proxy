@@ -16,7 +16,7 @@ Completed functionality:
 * Admin can denied IP addresses (only domain names allowed; carefully, perhaps the function can be bypassed)
 
 Disadvantages:
-* Creates two system threads for an each client connection (load on the system; cannot handle many connections)
+* no have reload operation for config (available only for the trusts file)
 
 Example of configuration
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/vinny-socks5-proxy/vinny-socks5-proxy.conf.txt
@@ -35,7 +35,7 @@ Socks5 прокси для домашнего использования на с
 * Администратор может запретить пересылку данных по IP-адресам (оставив только доменные имена; осторожно, возможно, данное ограничение можно обойти)
 
 Недостатки:
-* На каждое клиентское соединение создаёт два системных потока (нагрузка на систему; не может обрабатывать много соединений)
+* не возможности перезагрузить конфигурацию во время выполнения (доступно только для trusts-файла)
 
 Пример конфигурации
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/vinny-socks5-proxy/vinny-socks5-proxy.conf.txt
