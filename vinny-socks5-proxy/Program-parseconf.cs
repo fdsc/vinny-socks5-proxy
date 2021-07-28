@@ -197,6 +197,74 @@ namespace vinnysocks5proxy
                         }
                         break;
 
+                    case "Timeoutsendtotarget":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+                            
+                        if (Int32.TryParse(pVal, out int TimeoutSendToTarget))
+                        {
+                            current.TimeoutSendToTarget = TimeoutSendToTarget;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("debug level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
+                    case "timeoutsendtoclient":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+                            
+                        if (Int32.TryParse(pVal, out int TimeoutSendToClient))
+                        {
+                            current.TimeoutSendToClient = TimeoutSendToClient;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("debug level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
+                    case "timeoutreceivefromclient":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+                            
+                        if (Int32.TryParse(pVal, out int TimeoutReceiveFromClient))
+                        {
+                            current.TimeoutReceiveFromClient = TimeoutReceiveFromClient;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("debug level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
+                    case "timeoutreceivefromtarget":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+                            
+                        if (Int32.TryParse(pVal, out int TimeoutReceiveFromTarget))
+                        {
+                            current.TimeoutReceiveFromTarget = TimeoutReceiveFromTarget;
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("debug level is a number, but " + pVal);
+                            return false;
+                        }
+
+                        break;
+
                     case "debug":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;

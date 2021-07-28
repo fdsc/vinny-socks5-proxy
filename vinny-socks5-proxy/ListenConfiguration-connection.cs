@@ -67,7 +67,7 @@ namespace vinnysocks5proxy
     
                     doTerminate = true;
                     start.Stop();
-    
+
                     try
                     {
                         if (!doNotDelete)

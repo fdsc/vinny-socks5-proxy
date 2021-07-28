@@ -28,7 +28,7 @@ namespace vinnysocks5proxy
                     var sa = new SocketAsyncEventArgs();
                     sa.Completed += ReceiveAsyncTo;
                     sa.SetBuffer(BytesTo, 0, BytesTo.Length);
-    
+
                     if (!connection.ReceiveAsync(sa))
                         ReceiveAsyncTo(this, sa);
                 }
@@ -65,11 +65,11 @@ namespace vinnysocks5proxy
                         
                     if (e.BytesTransferred == 0)
                     {
-                        LogForConnection("The socket did not transmit any data and will be shutdown", connection, 3);
+                        LogForConnection("The socket did not transmit any data (from client) and will be shutdown", connection, 4);
                         Dispose();
                         return;
                     }
-    
+
                     int sended = 0;
     
                     sended = connectionTo.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
@@ -144,6 +144,13 @@ namespace vinnysocks5proxy
                 {
                     if (e.SocketError != SocketError.Success)
                         LogForConnection("Socket error " + e.SocketError, connection, 3);
+                        
+                    if (e.BytesTransferred == 0)
+                    {
+                        LogForConnection("The socket did not transmit any data (from target server) and will be shutdown", connection, 4);
+                        Dispose();
+                        return;
+                    }
     
                     int sended = 0;
     
@@ -175,6 +182,18 @@ namespace vinnysocks5proxy
             public void doProcessTraffic()
             {
                 LogForConnection($"Starting connections for user data for {connectionTo.LocalEndPoint} -> {connectionTo.RemoteEndPoint}", connection, 2);
+
+                if (listen.TimeoutSendToClient > 0)
+                connection  .SendTimeout    = listen.TimeoutSendToClient;
+                
+                if (listen.TimeoutSendToTarget > 0)
+                connectionTo.SendTimeout    = listen.TimeoutSendToTarget;
+
+                if (listen.TimeoutReceiveFromClient > 0)
+                connection  .ReceiveTimeout = listen.TimeoutReceiveFromClient;
+                
+                if (listen.TimeoutReceiveFromTarget > 0)
+                connectionTo.ReceiveTimeout = listen.TimeoutReceiveFromTarget;
 
                 setAcyncReceiveTo();
                 setAcyncReceiveFrom();

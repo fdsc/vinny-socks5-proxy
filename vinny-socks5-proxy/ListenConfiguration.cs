@@ -29,6 +29,11 @@ namespace vinnysocks5proxy
         public int  debug               = 0;        // Это для того, чтобы в лог выдавать чуть больше информации
         public bool Incorrect           = false;    // Если true, значит больше не будет прослушиваться
 
+        public int TimeoutSendToTarget      = -1;
+        public int TimeoutSendToClient      = -1;
+        public int TimeoutReceiveFromClient = -1;
+        public int TimeoutReceiveFromTarget = -1;
+
         public string ListenAddressForLog = "";
 
         // Всегда использовать lock(connections) при доступе. Это список соединений клиентов с сервером
