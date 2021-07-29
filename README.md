@@ -1,5 +1,5 @@
 # socks5-proxy
-simple socks5-proxy by C#/Mono (currently not finished; пока не закончено)
+simple socks5-proxy by C#/Mono
 
 Русский ниже
 
@@ -14,13 +14,15 @@ Completed functionality:
 * Can listen on multiple ports
 * Login and password authentication (need restart server for user add)
 * Admin can denied IP addresses (only domain names allowed; carefully, perhaps the function can be bypassed)
+* It is possible to differentiate access (for port, not for a user) by a trusts configuration file with a change in the file without stopping the server
 
 Disadvantages:
 * no have reload operation for config (available only for the trusts file)
+* complex language for configuring the trust file configuration
 
 Example of configuration
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/vinny-socks5-proxy/vinny-socks5-proxy.conf.txt
-* (not working yet) https://github.com/fdsc/vinny-socks5-proxy/blob/main/trusts/example.trusts
+* https://github.com/fdsc/vinny-socks5-proxy/blob/main/trusts/example3.trusts (and files near)
 
 ---------------
 Русский
@@ -33,10 +35,12 @@ Socks5 прокси для домашнего использования на с
 * Может прослушивать несколько портов
 * Аутентификация по логину и паролю (для добавления пользователя требуется перезапуск сервера)
 * Администратор может запретить пересылку данных по IP-адресам (оставив только доменные имена; осторожно, возможно, данное ограничение можно обойти)
+* Возможно разграничение доступа (для порта, не для пользователя) по файлу конфигурации доверия с изменением списка без прекращения работы сервера 
 
 Недостатки:
 * не возможности перезагрузить конфигурацию во время выполнения (доступно только для trusts-файла)
+* сложный язык настройки конфигурации файла доверия
 
 Пример конфигурации
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/vinny-socks5-proxy/vinny-socks5-proxy.conf.txt
-* (пока не работает) https://github.com/fdsc/vinny-socks5-proxy/blob/main/trusts/example.trusts
+* https://github.com/fdsc/vinny-socks5-proxy/blob/main/trusts/example3.trusts (и файлы рядом)

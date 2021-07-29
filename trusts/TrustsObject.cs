@@ -72,6 +72,10 @@ namespace trusts
                 // Проходим по всем командам блоков
                 foreach (var cmd in block.Value.commands)
                 {
+                    // Пропускаем команды логирования
+                    if (cmd.SubCommand == null && cmd.Name == "info")
+                        continue;
+
                     var transition = cmd.SubCommand as Transition;
                     if (transition == null || transition.Type == Transition.TransitionType.error || transition.Type == Transition.TransitionType.@return)
                     {
@@ -129,22 +133,53 @@ namespace trusts
                 var cmds = block.Value.commands;
                 if (cmds.Count > 0)
                 {
-                    var lastCommand = cmds[cmds.Count - 1].SubCommand as Compare;
-                    if (lastCommand == null)
-                        continue;
-
-                    if (lastCommand.maybe && !lastCommand.command.isNegative)
+                    // Сейчас в цикле отбрасываем команды info (lastCommand == null имеет только info)
+                    SubCommand lastCommand;
+                    int index = cmds.Count - 1;
+                    do
                     {
-                        logger.Log($"Error transition at line {lastCommand.LineNumber}: 'may' positive command is a last command of block. The command is meaningless", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                        lastCommand = cmds[index].SubCommand;
+                        index--;
+                    }
+                    while (index >= 0 && lastCommand == null);
 
-                        return false;
+                    if (lastCommand == null)
+                    {
+                        continue;
+                    }
+
+                    if (lastCommand is Compare cmp)
+                    {
+                        if (cmp.maybe && !cmp.command.isNegative)
+                        {
+                            logger.Log($"Error transition at line {lastCommand.LineNumber}: positive 'may' command is a last command of block. The command is meaningless", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+
+                            return false;
+                        }
+                        else
+                        if (!cmp.maybe && cmp.command.isNegative)
+                        {
+                            logger.Log($"Error transition at line {lastCommand.LineNumber}: negative 'must' command is a last command of block. The command is meaningless", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+
+                            return false;
+                        }
                     }
                     else
-                    if (!lastCommand.maybe && lastCommand.command.isNegative)
+                    if (lastCommand is Transition trn)
                     {
-                        logger.Log($"Error transition at line {lastCommand.LineNumber}: 'must' negative command is a last command of block. The command is meaningless", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                        if (trn.Type == Transition.TransitionType.@return && !trn.command.isNegative)
+                        {
+                            logger.Log($"Error transition at line {lastCommand.LineNumber}: positive 'return' command is a last command of block. The command is meaningless", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
 
-                        return false;
+                            return false;
+                        }
+                        else
+                        if (trn.Type == Transition.TransitionType.call && trn.command.isNegative)
+                        {
+                            logger.Log($"Error transition at line {lastCommand.LineNumber}: negative 'call' command is a last command of block. The command is meaningless", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+
+                            return false;
+                        }
                     }
                 }
             }
@@ -186,6 +221,11 @@ namespace trusts
                 var returnTypeTrue  = cmd.isNegative ? TrustsProgramContinuation.@false : TrustsProgramContinuation.@true;
                 var returnTypeFalse = cmd.isNegative ? TrustsProgramContinuation.@true  : TrustsProgramContinuation.@false;
 
+                if (cmd.SubCommand == null && cmd.Name == "info")
+                {
+                    logger.Log(cmd.Parameter, domainName.Name + " (trusts info command at line " + cmd.LineNumber + ")", ErrorReporting.LogTypeCode.Wargning, "trustsFile.info");
+                }
+                else
                 if (cmd.SubCommand is Compare)
                 {
                     var cmp = cmd.SubCommand as Compare;
@@ -280,10 +320,19 @@ namespace trusts
                     // то проверяем приоритет
                     // Если приоритет выше, устанавливаем новую команду
                     var command = cmd.SubCommand as Command;
-                    if (command.Priority > priority)
+                    if (command.Priority >= priority)
                     {
-                        priority = command.Priority;
-                        commandType = command.Type;
+                        if (command.Priority > priority)
+                        {
+                            priority    = command.Priority;
+                            commandType = command.Type;
+                        }
+                        else
+                        if (command.Type == Command.CommandType.reject)
+                        {
+                            priority    = command.Priority;
+                            commandType = command.Type;
+                        }
                     }
                 }
                 else

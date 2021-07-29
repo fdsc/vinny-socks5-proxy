@@ -253,6 +253,7 @@ namespace trusts
         
                                         // logger.Log($"Parsed command '{currentCommand.Name}' with subcommand '{currentCommand.SubCommand.ToString()}'", "", ErrorReporting.LogTypeCode.Usually, "trustsFile.parse");
                                         currentObject.commands.Add(currentCommand);
+                                        currentCommand = null;
                                     break;
         
                                 case "ret":
@@ -268,11 +269,39 @@ namespace trusts
                                             logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
                                             return null;
                                         }
+                                        
+                                        isNegative = false;
+                                        if (nLine[1].ToLowerInvariant().StartsWith("not:"))
+                                        {
+                                            nLine[1]   = nLine[1].Substring(startIndex: 4);
+                                            isNegative = true;
+                                        }
     
                                         currentCommand = new Directive("transition", nLine[1], isNegative, currentObject, i+1);
                                         currentCommand.SubCommand = new Transition(currentCommand, cmd, i+1);
     
                                         currentObject.commands.Add(currentCommand);
+                                    break;
+
+                                case "info":
+                                        if (currentObject == null)
+                                        {
+                                            logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                            return null;
+                                        }
+
+                                        isNegative = false;
+                                        if (nLine[1].ToLowerInvariant().StartsWith("not:"))
+                                        {
+                                            logger.Log($"TrustsObject.Parse error at line {i+1}. Info command can not be negative", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                            return null;
+                                        }
+    
+                                        currentCommand = new Directive("info", nLine[1], isNegative, currentObject, i+1);
+
+                                        // logger.Log($"Parsed command '{currentCommand.Name}' with subcommand '{currentCommand.SubCommand.ToString()}'", "", ErrorReporting.LogTypeCode.Usually, "trustsFile.parse");
+                                        currentObject.commands.Add(currentCommand);
+                                        currentCommand = null;
                                     break;
     
                                 default:
