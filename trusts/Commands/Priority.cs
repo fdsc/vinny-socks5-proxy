@@ -68,5 +68,23 @@ namespace trusts.Commands
 
             return len1 - len2;
         }
+
+        /// <summary>Сравнивает два приоритета</summary>
+        /// <param name="a">The first <see cref="trusts.Commands.Priority"/> to compare.</param>
+        /// <param name="b">The second <see cref="trusts.Commands.Priority"/> to compare.</param>
+        /// <returns><c>true</c> - если приоритет <c>a</c> выше <c>b</c>; иначе, <c>false</c>.</returns>
+        public static bool operator > (Priority a, Priority b)
+        {
+            return a.CompareTo(b) > 0;
+        }
+
+        /// <summary>Сравнивает два приоритета</summary>
+        /// <param name="a">The first <see cref="trusts.Commands.Priority"/> to compare.</param>
+        /// <param name="b">The second <see cref="trusts.Commands.Priority"/> to compare.</param>
+        /// <returns><c>true</c> - если <c>a</c> ниже <c>b</c>; иначе, <c>false</c>.</returns>
+        public static bool operator < (Priority a, Priority b)
+        {
+            return a.CompareTo(b) < 0;
+        }
     }
 }

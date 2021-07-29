@@ -32,11 +32,14 @@ namespace vinnysocks5proxy
                 int available = 0;
                 // lock (connection)
                 {
-                    available = connection.Available;
+                    available = connection?.Available ?? 0;
                     int count = 0;
                     while (available < minBytes)
                     {
                         try { lock (connection) Monitor.Wait(connection, timeout); } catch { }
+
+                        if (connection == null || isDisposed || doTerminate)
+                            return 0;
 
                         available = connection.Available;
 

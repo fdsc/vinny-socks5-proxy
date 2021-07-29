@@ -36,14 +36,15 @@ namespace trusts
 
             /// <summary>Создание подкоманды для команды command</summary>
             /// <param name="command">Вышестоящая команда (command). Сюда приходит команда по типу "command:accept:0.1"</param>
-            public Command(Directive command): base(command)
+            /// <param name="LineNumber">Номер строки, на которой встречена данная лексема</param>
+            public Command(Directive command, int LineNumber): base(command, LineNumber)
             {
                 // accept:1 делим на exactly и 1
                 var splitted = command.Parameter.Split(new string[] {":"}, 2, StringSplitOptions.RemoveEmptyEntries);
                 if (splitted.Length != 2)
                 {
                     command.syntaxError = true;
-                    var str = $"Command '{command.Name}' contains incorrect parameter '{command.Parameter}' (example :command:accept:0.0)";
+                    var str = $"Command '{command.Name}' at line {LineNumber} contains incorrect parameter '{command.Parameter}' (example :command:accept:0.0)";
                     str += "\r\nString must be priority at end (accept:0)";
                     command.OwnObject.logger.Log(str, command.OwnObject.Name, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
                     return;
@@ -59,7 +60,7 @@ namespace trusts
                 {
                     command.syntaxError = true;
                     var sb = new StringBuilder();
-                    sb.AppendLine($"Command '{command.Name}' contains incorrect parameter '{command.Parameter}' (example :command:accept:0.0)");
+                    sb.AppendLine($"Command '{command.Name}' at line {LineNumber} contains incorrect parameter '{command.Parameter}' (example :command:accept:0.0)");
                     sb.AppendLine("List of correct parameters name:");
                     foreach (var type in types)
                         sb.AppendLine(type.Key + "\t(" + type.Value + ")");
@@ -83,7 +84,7 @@ namespace trusts
                 {
                     command.syntaxError = true;
                     var sb = new StringBuilder();
-                    sb.AppendLine($"Command '{command.Name}' contains incorrect parameter '{command.Parameter}' (example :command:accept:0.0)");
+                    sb.AppendLine($"Command '{command.Name}' at line {LineNumber} contains incorrect parameter '{command.Parameter}' (example :command:accept:0.0)");
                     sb.AppendLine("Priority must be similary to '0.1.2.3.4'");
                     sb.AppendLine("0 - lowest");
                     sb.AppendLine("0.0 > 0");

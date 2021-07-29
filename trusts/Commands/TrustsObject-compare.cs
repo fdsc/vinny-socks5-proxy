@@ -14,6 +14,10 @@ namespace trusts
             public readonly int         StartIndex  = 0;                /// <summary>Конечный индекс поиска по поддоменам</summary>
             public readonly int         EndIndex    = int.MaxValue;     /// <summary>Режим сравнения (двоеточие или звёздочка)</summary>
             public readonly SplitRegime splitRegime = SplitRegime.inString;
+                                                                        /// <summary>cmp продолжает выполнение, если true, may - если false</summary>
+            public readonly bool        maybe       = false;
+            
+            
                                                                         /// <summary>Режим разделения строки (двоеточие или звёздочка)</summary>
             public enum SplitRegime
             {                                                           /// <summary>Строка для сравнения является одной строкой (двоеточие)</summary>
@@ -45,14 +49,16 @@ namespace trusts
 
             /// <summary>Создание подкоманды для команды cmp</summary>
             /// <param name="command">Вышестоящая команда (cmp). Сюда приходит команда по типу "exactly:d[0:1]"</param>
-            public Compare(Directive command): base(command)
+            /// <param name="LineNumber">Номер строки, на которой встречена данная лексема</param>
+            public Compare(Directive command, int LineNumber, bool maybe): base(command, LineNumber)
             {
+                this.maybe = maybe;
                 // exactly:d[0:1] делим на exactly и d[0:1]
                 var splitted = command.Parameter.Split(new string[] {":"}, 2, StringSplitOptions.RemoveEmptyEntries);
                 if (splitted.Length != 2)
                 {
                     command.syntaxError = true;
-                    command.OwnObject.logger.Log($"Command '{command.Name}' contains incorrect parameter '{command.Parameter}' (example :cmp:exactly:d[:])", command.OwnObject.Name, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                    command.OwnObject.logger.Log($"Command '{command.Name}' at line {LineNumber} contains incorrect parameter '{command.Parameter}' (example :cmp:exactly:d[:])", command.OwnObject.Name, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
                     return;
                 }
 
@@ -66,7 +72,7 @@ namespace trusts
                 {
                     command.syntaxError = true;
                     var sb = new StringBuilder();
-                    sb.AppendLine($"Command '{command.Name}' contains incorrect parameter '{command.Parameter}' (example :cmp:exactly:d[:])");
+                    sb.AppendLine($"Command '{command.Name}' at line {LineNumber} contains incorrect parameter '{command.Parameter}' (example :cmp:exactly:d[:])");
                     sb.AppendLine("List of correct parameters name:");
                     foreach (var type in types)
                         sb.AppendLine(type.Key);
@@ -181,7 +187,7 @@ namespace trusts
                 {
                     command.syntaxError = true;
                     var sb = new StringBuilder();
-                    sb.AppendLine($"Command '{command.Name}' contains incorrect parameter '{command.Parameter}' (example :cmp:exactly:d[:])");
+                    sb.AppendLine($"Command '{command.Name}' at line {LineNumber} contains incorrect parameter '{command.Parameter}' (example :cmp:exactly:d[:])");
                     sb.AppendLine("indexator must be similary to 'd[...]'. Examples");
                     sb.AppendLine("d[:] (entire domain string)");
                     sb.AppendLine("d[0:1] (second level domain string)");

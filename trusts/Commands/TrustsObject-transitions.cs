@@ -19,28 +19,30 @@ namespace trusts
             public enum TransitionType
             {                                                           /// <summary>Ошибочный тип</summary>
                 error      = 0,                                         /// <summary>Вызов</summary>
-                call       = 1,                                         /// <summary>Переход</summary>
-                jump       = 2,                                         /// <summary>Возврат</summary>
-                @return    = 3
+                call       = 1,                                         /// <summary>Возврат</summary>
+                @return    = 2,                                         /// <summary>Останов дальнейшего просмотра правил без условия или с условием</summary>
+                stop       = 3
             };
 
             /// <summary>Сопоставление строковых команд типу команды. Все команды указываются в НИЖНЕМ РЕГИСТРЕ</summary>
             public static readonly SortedList<string, TransitionType> types = new SortedList<string, TransitionType>()
             {
                 { "call",   TransitionType.call    },
-                { "jump",   TransitionType.jump    },
-                { "jmp",    TransitionType.jump    },
+                // { "jump",   TransitionType.jump    },
+                // { "jmp",    TransitionType.jump    },
                 { "return", TransitionType.@return },
                 { "ret",    TransitionType.@return },
                 { "err",    TransitionType.error   },
-                { "error",  TransitionType.error   }
+                { "error",  TransitionType.error   },
+                { "stop",   TransitionType.stop    }
             };
 
 
             /// <summary>Создание подкоманды для команды cmp</summary>
             /// <param name="command">Вышестоящая команда (transition). Сюда приходит команда по типу "call:blockName"</param>
             /// <param name="commandName">Имя вышестоящей команды</param>
-            public Transition(Directive command, string commandName): base(command)
+            /// <param name="LineNumber">Номер строки, на которой встречена данная лексема</param>
+            public Transition(Directive command, string commandName, int LineNumber): base(command, LineNumber)
             {
                 // Ищем нужный тип команды: jump, return, call или error
                 var index = types.IndexOfKey(commandName);
@@ -52,10 +54,25 @@ namespace trusts
                 if (Type == TransitionType.error)
                 {
                     command.syntaxError = true;
-                    command.OwnObject.logger.Log("Error command occured\r\n" + command.Parameter, "", ErrorReporting.LogTypeCode.SmallError, "trustsFile.parse");
+                    command.OwnObject.logger.Log($"Error command occured at line {LineNumber}\r\n" + command.Parameter, "", ErrorReporting.LogTypeCode.SmallError, "trustsFile.parse");
 
                     return;
                 }
+
+                if (Type == TransitionType.stop && command.isNegative)
+                {
+                    command.syntaxError = true;
+                    command.OwnObject.logger.Log($"Error command occured at line {LineNumber}\r\nStop command can not be negative (':not:' is error)", "", ErrorReporting.LogTypeCode.SmallError, "trustsFile.parse");
+                    return;
+                }
+/*
+                if (Type == TransitionType.jump && commandName == "&")
+                {
+                    command.syntaxError = true;
+                    command.OwnObject.logger.Log($"Error command occured at line {LineNumber}\r\nJump command can not have '&' parameter", "", ErrorReporting.LogTypeCode.SmallError, "trustsFile.parse");
+                    return;
+                }
+*/
 
                 this.Parameter = command.Parameter;
 
@@ -67,7 +84,7 @@ namespace trusts
                 {
                     command.syntaxError = true;
                     var sb = new StringBuilder();
-                    sb.AppendLine($"Command '{command.Name}' contains incorrect parameter '{command.Parameter}' (example :command:accept:0.0)");
+                    sb.AppendLine($"Command '{command.Name}' at line {LineNumber} contains incorrect parameter '{command.Parameter}' (example :command:accept:0.0)");
                     sb.AppendLine("Priority must be similary to '0.1.2.3.4'");
                     sb.AppendLine("0 - lowest");
                     sb.AppendLine("0.0 > 0");

@@ -1,22 +1,29 @@
-﻿:new:root
+﻿﻿:new:root
+
+:stop:&
+linuxmint
+yaStarted
+
+:command:accept:0
 
 :end:root
 
-:new:entireDomains
 
-:cmp:exactly:d[:]
-:cmp:exactly:d[1:]
-:cmp:exactly:d[:1]
-:cmp:exactly:d[1]
 
-:cmp:exactly:d[0:2]
-mail.yandex.ru
-disk.yandex.ru
+:new:linuxmint
 
-# :command:accept
-# :call:entireDomains
-:command:accept:0.1.2.3.0
+:must:exactly:d[0:1]
+linuxmint.com
 
-:end:entireDomains
+:end:linuxmint
 
-# dddd
+
+:new:yaStarted
+
+# :must:regex:d[1]
+# ^ya
+:may:EndsWith:d[1]
+# :must:EndsWith:d[1]
+ya
+
+:end:yaStarted

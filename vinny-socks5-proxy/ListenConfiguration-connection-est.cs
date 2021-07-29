@@ -268,12 +268,12 @@ namespace vinnysocks5proxy
                                     connectToSocks = "(" + domainName + ")\t" + connectToSocks;
 
                                     LogForConnection("Request for connection to '" + domainName + "'", connection, 3);
-                                    
+
                                     if (listen.trusts_domain != null)
                                     {
                                         if (!listen.trusts_domain.Compliance(domainName))
                                         {
-                                            LogForConnection($"Domain '{domainName} is denied", connection, 2);
+                                            LogForConnection($"Domain '{domainName}' is denied", connection, 2);
                                             processResponseForRequest(bb, EC_Denied);
                                             return;
                                         }

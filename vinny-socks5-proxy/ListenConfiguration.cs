@@ -122,7 +122,7 @@ namespace vinnysocks5proxy
                     }
                     catch (Exception e)
                     {
-                        Log("Exception occured by the close connections process\r\n" + e.Message, 0);
+                        Log("Exception occured by the preparation to close connections process\r\n" + e.Message, 0);
                     }
                 }
             }
