@@ -273,7 +273,7 @@ namespace vinnysocks5proxy
                                     {
                                         if (!listen.trusts_domain.Compliance(domainName))
                                         {
-                                            LogForConnection($"Domain '{domainName}' is denied", connection, 2);
+                                            LogForConnection($"Domain '{domainName}' is denied", connection, 1);
                                             processResponseForRequest(bb, EC_Denied);
                                             return;
                                         }

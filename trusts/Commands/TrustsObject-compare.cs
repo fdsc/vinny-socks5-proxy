@@ -50,6 +50,7 @@ namespace trusts
             /// <summary>Создание подкоманды для команды cmp</summary>
             /// <param name="command">Вышестоящая команда (cmp). Сюда приходит команда по типу "exactly:d[0:1]"</param>
             /// <param name="LineNumber">Номер строки, на которой встречена данная лексема</param>
+            /// <param name="maybe">Если true, то команда may, иначе команда must</param>
             public Compare(Directive command, int LineNumber, bool maybe): base(command, LineNumber)
             {
                 this.maybe = maybe;
