@@ -72,6 +72,7 @@ namespace vinnysocks5proxy
                     ExitWaitEvent.WaitOne();
                 }
                 while (!toTerminate);
+                Console.WriteLine("Start termination... " + getDateTime());
                 timer.Stop();
             }
             catch (Exception e)

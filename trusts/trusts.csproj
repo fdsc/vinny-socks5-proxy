@@ -52,7 +52,15 @@
     <Compile Include="Commands\DomainName.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="example.trusts" />
+    <None Include="example.trusts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="example2.trusts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="example3.trusts">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\" />

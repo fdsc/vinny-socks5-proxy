@@ -124,7 +124,8 @@ namespace trusts
 
                     return false;
                 }
-                
+
+                // Контроль за тем, что команды, которые не имеют смысла, никогда не будут выполнены (будет синтактическая ошибка)
                 var cmds = block.Value.commands;
                 if (cmds.Count > 0)
                 {
@@ -302,43 +303,98 @@ namespace trusts
         public bool Compliance(DomainName domainName, Compare compare)
         {
             var domain = domainName[compare.StartIndex, compare.EndIndex];
+            var dsplit = compare.splitRegime == Compare.SplitRegime.splitted ? domainName.Splitted(compare.StartIndex, compare.EndIndex) : null;
+
             switch (compare.Type)
             {
                 case Compare.CompareType.exactly:
 
-                        foreach (var param in compare.parametres)
-                            if (domain == param)
-                                return true;
+                        if (compare.splitRegime == Compare.SplitRegime.inString)
+                        {
+                            foreach (var param in compare.parametres)
+                                if (domain == param)
+                                    return true;
+                        }
+                        else
+                        {
+                            foreach (var param in compare.parametres)
+                            foreach (var sub   in dsplit)
+                                if (sub == param)
+                                    return true;
+                        }
                     break;
                     
                 case Compare.CompareType.contains:
 
-                        foreach (var param in compare.parametres)
-                            if (domain.Contains(param))
-                                return true;
+                        if (compare.splitRegime == Compare.SplitRegime.inString)
+                        {
+                            foreach (var param in compare.parametres)
+                                if (domain.Contains(param))
+                                    return true;
+                        }
+                        else
+                        {
+                            foreach (var param in compare.parametres)
+                            foreach (var sub   in dsplit)
+                                if (sub.Contains(param))
+                                    return true;
+                        }
                     break;
 
                 case Compare.CompareType.endsWith:
 
-                        foreach (var param in compare.parametres)
-                            if (domain.EndsWith(param))
-                                return true;
+                        if (compare.splitRegime == Compare.SplitRegime.inString)
+                        {
+                            foreach (var param in compare.parametres)
+                                if (domain.EndsWith(param))
+                                    return true;
+                        }
+                        else
+                        {
+                            foreach (var param in compare.parametres)
+                            foreach (var sub   in dsplit)
+                                if (sub.EndsWith(param))
+                                    return true;
+                        }
                     break;
 
                 case Compare.CompareType.startsWith:
 
-                        foreach (var param in compare.parametres)
-                            if (domain.StartsWith(param))
-                                return true;
+                        if (compare.splitRegime == Compare.SplitRegime.inString)
+                        {
+                            foreach (var param in compare.parametres)
+                                if (domain.StartsWith(param))
+                                    return true;
+                        }
+                        else
+                        {
+                            foreach (var param in compare.parametres)
+                            foreach (var sub   in dsplit)
+                                if (sub.StartsWith(param))
+                                    return true;
+                        }
                     break;
 
                 case Compare.CompareType.regex:
 
-                        foreach (var param in compare.parametres)
+                        if (compare.splitRegime == Compare.SplitRegime.inString)
                         {
-                            var regex = new Regex(param, RegexOptions.IgnoreCase);
-                            if (regex.IsMatch(domain))
-                                return true;
+                            foreach (var param in compare.parametres)
+                            {
+                                var regex = new Regex(param, RegexOptions.IgnoreCase);
+                                if (regex.IsMatch(domain))
+                                    return true;
+                            }
+                        }
+                        else
+                        {
+                            foreach (var param in compare.parametres)
+                            {
+                                var regex = new Regex(param, RegexOptions.IgnoreCase);
+                                foreach (var sub in dsplit)
+                                    if (regex.IsMatch(sub))
+                                    return true;
+                            }
                         }
                     break;
 

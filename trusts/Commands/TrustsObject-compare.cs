@@ -116,7 +116,7 @@ namespace trusts
                         // d[:]
                         if (left.Length == 0 && right.Length == 0)
                         {
-                            if (indexatorString != ":")
+                            if (indexatorString != ":" && indexatorString != "*")
                                 goto indexatorError;
 
                             // Всё уже верно установлено, ничего устанавливать не надо

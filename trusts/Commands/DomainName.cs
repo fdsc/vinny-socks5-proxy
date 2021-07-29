@@ -53,6 +53,30 @@ namespace trusts.Commands
             syntaxError = false;
         }
 
+        /// <summary>Возвращает массив поддоменов по отдельности (для команды d[*])</summary>
+        /// <returns>Массив поддоменов. Для d[*] это будет массив splitted</returns>
+        /// <param name="s">Первый добавляемый элемент</param>
+        /// <param name="e">Последний добавляемый элемент (включительно)</param>
+        public string[] Splitted(int s, int e)
+        {
+            if (e < s)
+                return new string[0];
+                
+            if (e >= splitted.Length)
+                e = splitted.Length - 1;
+
+            var result = new string[e - s + 1];
+            for (int i = s; i <= e; i++)
+            {
+                if (i >= splitted.Length)
+                    break;
+
+                result[i - s] = splitted[i];
+            }
+
+            return result;
+        }
+
         /// <summary>Возвращает подстроку, содержащую только указанные уровни поддоменов</summary>
         /// <param name="s">Начальный индекс уровня поддомена</param>
         /// <param name="e">Конечный индекс уровня поддомена (включительно)</param>

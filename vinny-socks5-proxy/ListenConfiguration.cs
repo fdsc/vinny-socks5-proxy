@@ -118,7 +118,6 @@ namespace vinnysocks5proxy
                             continue;
 
                         connection.doTerminate = true;
-                        connection.Pulse();
                     }
                     catch (Exception e)
                     {
