@@ -6,7 +6,7 @@ simple socks5-proxy by C#/Mono
 To translate to English
 https://translate.yandex.ru/?lang=ru-en
 
-Socks5 proxy for host in home usage.
+Socks5 и http proxy for host in home usage.
 
 Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework 4.8 in Windows ( https://dotnet.microsoft.com/download )
 
@@ -14,6 +14,7 @@ Completed functionality:
 * Can listen on multiple ports
 * Login and password authentication (need restart server for user add)
 * It is possible to differentiate access (for port, not for a user) by a trusts configuration file with a change in the file without stopping the server
+* Both the socks5 and the http proxy working on the same port
 
 Disadvantages:
 * no have reload operation for config (available only for the trusts file)
@@ -29,7 +30,7 @@ Example of configuration
 ---------------
 Русский
 
-Socks5 прокси для домашнего использования на своей машине.
+Socks5 и http прокси для домашнего использования на своей машине.
 
 Требует Mono на Linux ( https://www.mono-project.com/ ) и .NET Framework 4.8 на Windows ( https://dotnet.microsoft.com/download )
 
@@ -37,6 +38,7 @@ Socks5 прокси для домашнего использования на с
 * Может прослушивать несколько портов
 * Аутентификация по логину и паролю (для добавления пользователя требуется перезапуск сервера)
 * Возможно разграничение доступа (для порта, не для пользователя) по файлу конфигурации доверия с изменением списка без прекращения работы сервера 
+* На одном порту поднимается как socks5, так и http-прокси
 
 Недостатки:
 * не возможности перезагрузить конфигурацию во время выполнения (доступно только для trusts-файла)
