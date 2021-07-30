@@ -19,10 +19,13 @@ Completed functionality:
 Disadvantages:
 * no have reload operation for config (available only for the trusts file)
 * complex language for configuring the trust file configuration
+* only the TCP CONNECT command is supported. This is enough for most home applications (browsers, disks, etc.), but this is not all the socks5 possibilities
+
 
 Example of configuration
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/vinny-socks5-proxy/vinny-socks5-proxy.conf.txt
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/trusts/example3.trusts (and files near)
+
 
 ---------------
 Русский
@@ -40,6 +43,8 @@ Socks5 прокси для домашнего использования на с
 Недостатки:
 * не возможности перезагрузить конфигурацию во время выполнения (доступно только для trusts-файла)
 * сложный язык настройки конфигурации файла доверия
+* поддерживается только команда TCP CONNECT. Этого достаточно для большинства домашних приложений (браузеров, дисков и т.п.), но это не все возможности socks5
+
 
 Пример конфигурации
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/vinny-socks5-proxy/vinny-socks5-proxy.conf.txt
