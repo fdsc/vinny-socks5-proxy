@@ -111,7 +111,7 @@ namespace vinnysocks5proxy
                 {
                     var sa = new SocketAsyncEventArgs();
                     sa.Completed += ReceiveAsyncFrom;
-                    sa.SetBuffer(BytesFrom, 0, BytesTo.Length);
+                    sa.SetBuffer(BytesFrom, 0, BytesFrom.Length);
 
                     if (!connectionTo.ReceiveAsync(sa))
                         ReceiveAsyncFrom(this, sa);
@@ -121,7 +121,10 @@ namespace vinnysocks5proxy
                     if (!doTerminate)
                         LogForConnection(e.Message, connection, 3);
 
-                    Dispose();
+                    // !isEstablished - это запросы от doHttpWithoutConnect
+                    if (isEstablished)
+                        Dispose();
+
                     return;
                 }
                 catch (Exception e)
@@ -129,7 +132,10 @@ namespace vinnysocks5proxy
                     if (!doTerminate)
                         LogForConnection(e.Message + "\r\n" + e.StackTrace, connection, 2);
 
-                    Dispose();
+                    // !isEstablished - это запросы от doHttpWithoutConnect
+                    if (isEstablished)
+                        Dispose();
+
                     return;
                 }
             }
@@ -144,13 +150,20 @@ namespace vinnysocks5proxy
 
                 try
                 {
+                    // Если соединение было завершено, ничего не делаем
+                    if (connectionTo == null || e.ConnectSocket == oldConnectionTo)
+                        return;
+
                     if (e.SocketError != SocketError.Success)
                         LogForConnection("Socket error " + e.SocketError, connection, 3);
-                        
+
                     if (e.BytesTransferred == 0)
                     {
                         LogForConnection("The socket did not transmit any data (from target server) and will be shutdown", connection, 4);
-                        Dispose();
+
+                        if (isEstablished)
+                            Dispose();
+
                         return;
                     }
 
@@ -163,14 +176,17 @@ namespace vinnysocks5proxy
     
                     setAcyncReceiveFrom();
                     if (listen.debug > 4)
-                    LogForConnection("Transfer data to, size " + sended, connection, 5);
+                    LogForConnection("Transfer data from, size " + sended, connection, 5);
                 }
                 catch (SocketException ex)
                 {
                     if (!doTerminate)
                         LogForConnection(ex.Message, connection, 3);
 
-                    Dispose();
+                    // !isEstablished - это запросы от doHttpWithoutConnect
+                    if (isEstablished)
+                        Dispose();
+
                     return;
                 }
                 catch (Exception ex)
@@ -178,7 +194,9 @@ namespace vinnysocks5proxy
                     if (!doTerminate)
                         LogForConnection(ex.Message + "\r\n" + ex.StackTrace, connection, 2);
 
-                    Dispose();
+                    if (isEstablished)
+                        Dispose();
+
                     return;
                 }
             }

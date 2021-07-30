@@ -123,14 +123,17 @@ namespace vinnysocks5proxy
                 var tm = TimeCounter & 0x7F;
                 if (tm == 0)    // Каждые две минуты, примерно
                 {
-                    foreach (var ls in listens)
+                    for (int i = 0; i < listens.Count; i++)
                     {
+                        var ls  = listens[i];
                         var cnt = ls.connections.Count;
-                        foreach (var connection in ls.connections)
+                        for (var j = 0; j < ls.connections.Count; j++)
                         {
+                            var connection = ls.connections[j];
                             try
                             {
-                                connection.CheckTimeoutAndClose(TimeCounter);
+                                if (connection.CheckTimeoutAndClose(TimeCounter))
+                                    i--;
                             }
                             catch
                             {}

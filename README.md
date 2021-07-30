@@ -13,7 +13,6 @@ Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework 4.8 in W
 Completed functionality:
 * Can listen on multiple ports
 * Login and password authentication (need restart server for user add)
-* Admin can denied IP addresses (only domain names allowed; carefully, perhaps the function can be bypassed)
 * It is possible to differentiate access (for port, not for a user) by a trusts configuration file with a change in the file without stopping the server
 
 Disadvantages:
@@ -37,7 +36,6 @@ Socks5 прокси для домашнего использования на с
 Законченная функциональность
 * Может прослушивать несколько портов
 * Аутентификация по логину и паролю (для добавления пользователя требуется перезапуск сервера)
-* Администратор может запретить пересылку данных по IP-адресам (оставив только доменные имена; осторожно, возможно, данное ограничение можно обойти)
 * Возможно разграничение доступа (для порта, не для пользователя) по файлу конфигурации доверия с изменением списка без прекращения работы сервера 
 
 Недостатки:

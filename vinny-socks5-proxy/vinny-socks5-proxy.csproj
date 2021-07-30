@@ -54,6 +54,7 @@
     <Compile Include="ListenConfiguration-connection.cs" />
     <Compile Include="ListenConfiguration-connection-est.cs" />
     <Compile Include="ListenConfiguration-connection-traffic.cs" />
+    <Compile Include="ListenConfiguration-connection-http.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="vinny-socks5-proxy.conf">

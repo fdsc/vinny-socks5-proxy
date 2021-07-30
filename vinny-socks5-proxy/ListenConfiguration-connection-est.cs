@@ -44,6 +44,9 @@ namespace vinnysocks5proxy
             public const int    BufferSizeForFrom       = 65536;
             public const int    MaxErrorCount           = 6;
 
+            /// <summary>Используется для кодирования сообщений из октетов в строки</summary>
+            public readonly ASCIIEncoding asciiEncoding = new ASCIIEncoding();
+
             // Установка нового соединения клиента с прокси
             public Connection(Socket connection, ListenConfiguration listen)
             {
@@ -63,35 +66,67 @@ namespace vinnysocks5proxy
                         bool successNegotiation = false; 
                         try
                         {
-                            var b  = new byte[4096];
+                            var b = BytesTo;
                             var bb = new BytesBuilder();
-    
+
                             // Установление соединения
                             // Ожидаем байты коннекта по socks5 https://datatracker.ietf.org/doc/html/rfc1928
                             var available = waitAvailableBytes(3, timeout: int.MaxValue);
-                            
+
                             if (available == 0)
                                 return;
-    
+
                             if (available > b.Length)
                             {
                                 available = b.Length;
                             }
-    
-                            connection.Receive(b, available, SocketFlags.None);
+
+                            // На всякий случай, принимаем в цикле, чтобы не пропустить http-заголовок
+                            int offset = ReceiveBytes(connection, b);
                             // listen.Log(BitConverter.ToString(b, 0, available));
-                            
-                            
+
                             // Версия протокола socks - 0x05
                             // Второй байт - это количество поддерживаемых методов (по байту на метод)
                             // Таким образом, всего сейчас должно быть получено не менее чем methodsCount + 2 байта
                             var methodsCount = b[1];
-                            if (b[0] != 0x05 || methodsCount == 0 || methodsCount != available - 2)
+                            if (b[0] != 0x05 || methodsCount == 0 || methodsCount != offset - 2)
                             {
+                                // Проверяяем. Возможно, подключение идёт по http
+                                var httpStr = asciiEncoding.GetString(b, 0, offset);
+                                if (httpStr.ToLowerInvariant().StartsWith("connect ") && httpStr.EndsWith("\r\n\r\n") && httpStr.ToLowerInvariant().Contains("http/1.1"))
+                                {
+                                    if (doHttpConnect(connection, listen, httpStr))
+                                        successNegotiation = true;
+
+                                    return;
+                                }
+
+                                // Явно, что это не socks5
+                                if (httpStr.Length > 17 && httpStr.ToLowerInvariant().Contains("http"))
+                                {
+                                    // Убираем из строки двоичные данные, чтобы не лезли куда не надо
+                                    httpStr = ResetMessageBody(httpStr);
+
+                                    // Это web-прокси без туннелирования с помощью CONNECT
+                                    if (httpStr.ToLowerInvariant().Contains("http://")/* || httpStr.ToLowerInvariant().Contains("https://")*/)
+                                    {
+                                        if (doHttpWithoutConnect(connection, listen, httpStr, b, offset))
+                                            successNegotiation = true;
+                                    }
+
+                                    if (successNegotiation)
+                                        return;
+
+                                    LogForConnection($"incorrect http connection\r\n{httpStr}", connection, 0);
+                                    SendHttpResponse("501 Not Implemented", connection);
+
+                                    return;
+                                }
+
                                 processInvalidProtocolMessage();
                                 return;
                             }
-    
+
                             // 0 - без аутентификации; 2 - парольная аутентификация
                             int method = listen.users.Count == 0 ? 0 : 2;
                             for (var i = 2; i < available; i++)
@@ -106,9 +141,9 @@ namespace vinnysocks5proxy
                             LogErrorForConnection($"The correct authorization method was not found (check user and password in client and in server)", connection, b, available);
 
                             return;
-    
-                            findMethod:
-    
+
+                        findMethod:
+
                             if (method == 0)
                                 connection.Send(NoAuthMethodResponse);
                             else
@@ -131,16 +166,16 @@ namespace vinnysocks5proxy
                                 var userNameLen = b[1];
                                 waitAvailableBytes(userNameLen);
                                 connection.Receive(b, userNameLen, SocketFlags.None);
-                                var user = Encoding.ASCII.GetString(b, 0, userNameLen);
-                                
+                                var user = asciiEncoding.GetString(b, 0, userNameLen);
+
                                 // Получаем длину пароля и сам пароль
                                 waitAvailableBytes(1);
                                 connection.Receive(b, 1, SocketFlags.None);
                                 var pwdLen = b[0];
                                 connection.Receive(b, pwdLen, SocketFlags.None);
 
-                                var password = Encoding.ASCII.GetString(b, 0, pwdLen);
-                                
+                                var password = asciiEncoding.GetString(b, 0, pwdLen);
+
                                 var key = listen.users.IndexOfKey(user);
                                 if (key < 0)
                                 {
@@ -149,7 +184,7 @@ namespace vinnysocks5proxy
                                     return;
                                 }
 
-                                if (  !SecureCompare(password, listen.users[user])  )
+                                if (!SecureCompare(password, listen.users[user]))
                                 {
                                     LogErrorForConnection($"Incorrect user or password: " + user, connection, null, 0);
                                     connection.Send(new byte[] { 0x01, 0x01 });
@@ -160,16 +195,16 @@ namespace vinnysocks5proxy
                                 LogForConnection($"Success login for user '" + user + "'", connection, 3);
                                 connection.Send(new byte[] { 0x01, 0x00 });
                             }
-    
+
                             available = waitAvailableBytes(7);
                             if (available == 0)
                                 return;
-    
+
                             if (available > b.Length)
                             {
                                 available = b.Length;
                             }
-    
+
                             connection.Receive(b, available, SocketFlags.None);
                             // listen.Log(BitConverter.ToString(b, 0, available));
 
@@ -179,7 +214,7 @@ namespace vinnysocks5proxy
                                 processInvalidProtocolMessage();
                                 return;
                             }
-    
+
                             // Второй байт - команда соединения
                             // CONNECT '01'
                             // BIND '02'
@@ -191,7 +226,7 @@ namespace vinnysocks5proxy
                                 processResponseForRequest(bb, EC_Command_not_supported);
                                 return;
                             }
-                            
+
                             // Читаем тип адреса ATYP
                             // Проверяем, что он корректен и разрешён в конфигах
                             var addressType = b[3];
@@ -201,21 +236,21 @@ namespace vinnysocks5proxy
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
                             }
-                            
+
                             if (addressType == 0x01 && !listen.namesGranted_ipv4)
                             {
                                 LogErrorForConnection($"ipv4 address is denied by configuration", connection, b, available);
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
                             }
-    
+
                             if (addressType == 0x03 && !listen.namesGranted_domain)
                             {
                                 LogErrorForConnection($"The domain name type of address is denied by configuration", connection, b, available);
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
                             }
-    
+
                             if (addressType == 0x04 && !listen.namesGranted_ipv6)
                             {
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
@@ -223,23 +258,23 @@ namespace vinnysocks5proxy
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
                             }
-                            
+
                             var ConnectToPort = b[available - 1] + (b[available - 2] << 8);
 
                             try
                             {
-    
+
                                 // Смотрим, какой именно адрес и готовим для него почву
                                 bool connected = false;
-                                int  networkUnreachable = 0;
-                                int  connectionRefused  = 0;
-                                int  anotherError       = 0;
+                                int networkUnreachable = 0;
+                                int connectionRefused = 0;
+                                int anotherError = 0;
                                 if (addressType == 0x01 || addressType == 0x04) // Это IP-адреса
                                 {
                                     bb.addWithCopy(b, -1, 4, available - 2);
                                     var ConnectToIP = new IPAddress(bb.getBytes());
-                                    connectionTo    = new Socket(ConnectToIP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                                    var ipe         = new IPEndPoint(ConnectToIP, ConnectToPort);
+                                    connectionTo = new Socket(ConnectToIP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                                    var ipe = new IPEndPoint(ConnectToIP, ConnectToPort);
                                     connectToSocks += "\t(" + ipe + ")";
 
                                     try
@@ -262,9 +297,9 @@ namespace vinnysocks5proxy
                                         processInvalidProtocolMessage();
                                         return;
                                     }
-    
+
                                     bb.addWithCopy(b, -1, 5, 5 + b[4]);
-                                    var domainName  = Encoding.ASCII.GetString(bb.getBytes());
+                                    var domainName = asciiEncoding.GetString(bb.getBytes());
                                     connectToSocks = "(" + domainName + ")\t" + connectToSocks;
 
                                     LogForConnection("Request for connection to '" + domainName + "'", connection, 3);
@@ -279,39 +314,11 @@ namespace vinnysocks5proxy
                                         }
                                     }
 
-                                    var addresses = Dns.GetHostAddresses(domainName);
-    
-                                    // Перебираем возможные адреса соединения, если с одним не удалось соединить
-                                    foreach (var addr in addresses)
-                                    {
-                                        connectionTo    = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                                        var ipe         = new IPEndPoint(addr, ConnectToPort);
-
-                                        LogForConnection("Try connection to " + ipe, connection, 4);
-                                        try
-                                        {
-                                            connectionTo.Connect(ipe);
-                                            connected = true;
-                                            connectToSocks += "\t" + connectionTo.LocalEndPoint + " -> " + ipe + "";
-                                            break;
-                                        }
-                                        catch (SocketException e)
-                                        {
-                                            if (e.ErrorCode == 10061)
-                                                connectionRefused++;
-                                            else
-                                            if (e.ErrorCode == 10051)
-                                                networkUnreachable++;
-                                            else
-                                                anotherError++;
-
-                                            LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 3);
-                                        }
-                                    }
+                                    GetSocketForTarget(connection, ConnectToPort, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domainName);
                                 }
-    
+
                                 bb.Clear();
-    
+
                                 if (!connected)
                                 {
                                     if (connectionRefused > 0)
@@ -353,7 +360,7 @@ namespace vinnysocks5proxy
                                 LogErrorForConnection($"Exception " + e.Message + "\r\n\r\n" + e.StackTrace, connection, b, available);
                                 processResponseForRequest(bb, EC_general_SOCKS_server_failure);
                             }
-                            
+
                         }
                         catch (Exception e)
                         {
@@ -369,10 +376,65 @@ namespace vinnysocks5proxy
 	                }
                 );
             }
-            
+
+            private static string ResetMessageBody(string httpStr)
+            {
+                if (httpStr.Contains("\r\n\r\n"))
+                    httpStr = httpStr.Substring(0, httpStr.IndexOf("\r\n\r\n") + 4);
+
+                return httpStr;
+            }
+
+            public void GetSocketForTarget(Socket connection, int ConnectToPort, ref bool connected, ref int networkUnreachable, ref int connectionRefused, ref int anotherError, string domainName)
+            {
+                var addresses = Dns.GetHostAddresses(domainName);
+
+                // Перебираем возможные адреса соединения, если с одним не удалось соединить
+                foreach (var addr in addresses)
+                {
+                    connectionTo = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    var ipe = new IPEndPoint(addr, ConnectToPort);
+
+                    LogForConnection("Try connection to " + ipe, connection, 4);
+                    try
+                    {
+                        connectionTo.Connect(ipe);
+                        connected = true;
+                        connectToSocks += "\t" + connectionTo.LocalEndPoint + " -> " + ipe + "";
+                        break;
+                    }
+                    catch (SocketException e)
+                    {
+                        if (e.ErrorCode == 10061)
+                            connectionRefused++;
+                        else
+                        if (e.ErrorCode == 10051)
+                            networkUnreachable++;
+                        else
+                            anotherError++;
+
+                        LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 3);
+                    }
+                }
+            }
+
+            public static int ReceiveBytes(Socket connection, byte[] b)
+            {
+                var offset = 0;
+                var received = 0;
+                do
+                {
+                    received = connection.Receive(b, offset, b.Length - offset, SocketFlags.None);
+                    offset += received;
+                }
+                while (connection.Available > 0 && received > 0);
+
+                return offset;
+            }
+
             public void processInvalidProtocolMessage()
             {
-                listen.Log($"error for connection {connection.RemoteEndPoint.ToString()}\r\nInvalid protocol. Socks5 protocol must be setted. Check protocol record in the client", 1);
+                listen.Log($"error for connection {connection.RemoteEndPoint.ToString()}\r\nInvalid protocol. Socks5 protocol must be setted (or 'http'). Check protocol record in the client", 1);
 
                 // Dispose уже вызывается в finally-блоке вызывающей функции
                 // this.Dispose();

@@ -63,7 +63,7 @@ namespace vinnysocks5proxy
                 LastActiveConnectionTimerCounter = MainClass.TimeCounter;
             }
 
-            public void CheckTimeoutAndClose(int TimerCounter)
+            public bool CheckTimeoutAndClose(int TimerCounter)
             {
                 var timeout = Math.Max(listen.TimeoutReceiveFromClient, Math.Max(listen.TimeoutReceiveFromTarget, Math.Max(listen.TimeoutSendToClient, listen.TimeoutSendToTarget) ));
                 if (!isEstablished)
@@ -74,7 +74,10 @@ namespace vinnysocks5proxy
                 {
                     LogForConnection($"Connection closed by watchdog timer", connection, 3);
                     Dispose();
+                    return true;
                 }
+
+                return false;
             }
 
             public void Dispose()
@@ -82,10 +85,11 @@ namespace vinnysocks5proxy
                 Dispose(false);
             }
 
-            public bool doTerminate = false;
-            public bool isDisposed  = false;
+            public volatile bool doTerminate = false;
+            public volatile bool isDisposed  = false;
             public void Dispose(bool doNotDelete)
             {
+                doTerminate = true;
                 lock (this)
                 {
                     if (isDisposed)
@@ -94,8 +98,7 @@ namespace vinnysocks5proxy
                     LogForConnection($"Closing connection started; Count of connections in the listener {listen.connections.Count}", connection, 4);
                     try {    if (connection  .Connected) connection  .Shutdown(SocketShutdown.Both);    } catch {}
                     try {    if (connectionTo.Connected) connectionTo.Shutdown(SocketShutdown.Both);    } catch {}
-    
-                    doTerminate = true;
+
                     start.Stop();
 
                     try
@@ -108,17 +111,40 @@ namespace vinnysocks5proxy
                     {
                         listen.Log($"Connection.Dispose {connectToSocks} raised exception " + e.Message, 0);
                     }
-    
+
                     try {  connection  ?.Dispose();  } catch {}
                     try {  connectionTo?.Dispose();  } catch {}
                     connection   = null;
                     connectionTo = null;
-    
-                    LogForConnection($"Connection closed; sended bytes {SizeOfTransferredDataTo.ToString("N0")}, received bytes {SizeOfTransferredDataFrom.ToString("N0")}; time {start.Elapsed}; Count of connections in the listener {listen.connections.Count}", connection, 2);
+
+                    LogForConnection($"Connection closed; sended bytes {FormatWithSpaces(SizeOfTransferredDataTo)}, received bytes {FormatWithSpaces(SizeOfTransferredDataFrom)}; time {start.Elapsed}; Count of connections in the listener {listen.connections.Count}", connection, 2);
                     isDisposed = true;
                 }
 
                 GC.Collect();
+            }
+            
+            /// <summary>Делает примерно то же, что и SizeOfTransferredDataTo.ToString("N0")</summary>
+            /// <returns>Число, дополненное пробелами-разделителями разрядов</returns>
+            /// <param name="number">Число для преобразования</param>
+            public static string FormatWithSpaces(long number)
+            {
+                var cnt = 0;
+                var sb  = new StringBuilder(8);
+                do
+                {
+                    var t = number % 10;
+                    number /= 10;
+
+                    sb.Insert(0, t);
+
+                    cnt++;
+                    if (cnt % 3 == 0)
+                        sb.Insert(0, " ");
+                }
+                while (number > 0);
+
+                return sb.ToString();
             }
         }
     }

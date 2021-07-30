@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using static trusts.Helper;
 
 namespace trusts
@@ -36,6 +37,9 @@ namespace trusts
             }
         }
 
+        /// <summary>Кодировка, используемая для логирования</summary>
+        protected Encoding utf8 = new UTF8Encoding();
+
         /// <summary>Логирует сообщение (в базовом классе ничего не делает)</summary>
         /// <param name="Message">Сообщение для логирования</param>
         /// <param name="secondIndentification">Дополнительное идентификационное сообщение</param>
@@ -48,7 +52,7 @@ namespace trusts
 
             var str = String.IsNullOrEmpty(secondIndentification) ? "" : secondIndentification + "\r\n";
             lock (this)
-                File.AppendAllText(logFile.FullName, isError.ToString() + "\t" + getDateTime() + $"; pid = {PID}\r\n" + str + Message + "\r\n----------------------------------------------------------------\r\n\r\n");
+                File.AppendAllText(logFile.FullName, isError.ToString() + "\t" + getDateTime() + $"; pid = {PID}\r\n" + str + Message + "\r\n----------------------------------------------------------------\r\n\r\n", utf8);
         }
     }
 }
