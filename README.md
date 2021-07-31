@@ -17,6 +17,7 @@ Completed functionality:
 * Both the socks5 and the http proxy working on the same port
 
 Disadvantages:
+* this proxy is made for personal use. I didn't debug it much and not "polished it"
 * no have reload operation for config (available only for the trusts file)
 * complex language for configuring the trust file configuration
 * only the TCP CONNECT command is supported. This is enough for most home applications (browsers, disks, etc.), but this is not all the socks5 possibilities
@@ -41,6 +42,7 @@ Socks5 и http прокси для домашнего использования
 * На одном порту поднимается как socks5, так и http-прокси
 
 Недостатки:
+* этот прокси сделан для личного пользования. Я не сильно его отлаживал и "шлифовал"
 * не возможности перезагрузить конфигурацию во время выполнения (доступно только для trusts-файла)
 * сложный язык настройки конфигурации файла доверия
 * поддерживается только команда TCP CONNECT. Этого достаточно для большинства домашних приложений (браузеров, дисков и т.п.), но это не все возможности socks5
