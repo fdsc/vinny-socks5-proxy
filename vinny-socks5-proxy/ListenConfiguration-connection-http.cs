@@ -53,7 +53,7 @@ namespace vinnysocks5proxy
                     var connect       = connectString.Split(new string[] {" "}, StringSplitOptions.RemoveEmptyEntries);
 
                     // В первой строке должно быть три разделённых пробелами лексемы
-                    if (connect.Length != 3 || connect[0].ToLowerInvariant() != "connect" || connect[2].ToLowerInvariant() != "http/1.1")
+                    if (connect.Length != 3 || connect[0].ToLowerInvariant() != "connect" || (connect[2].ToLowerInvariant() != "http/1.1" && connect[2].ToLowerInvariant() != "http/1.0"))
                     {
                         LogForConnection($"incorrect http connection\r\n{HttpHello}", connection, 0);
                         SendHttpResponse("400 Bad Request", connection);

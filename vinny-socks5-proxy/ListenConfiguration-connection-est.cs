@@ -93,7 +93,7 @@ namespace vinnysocks5proxy
                             {
                                 // Проверяяем. Возможно, подключение идёт по http
                                 var httpStr = asciiEncoding.GetString(b, 0, offset);
-                                if (httpStr.ToLowerInvariant().StartsWith("connect ") && httpStr.EndsWith("\r\n\r\n") && httpStr.ToLowerInvariant().Contains("http/1.1"))
+                                if (httpStr.ToLowerInvariant().StartsWith("connect ") && httpStr.EndsWith("\r\n\r\n") && httpStr.ToLowerInvariant().Contains("http/1."))
                                 {
                                     if (doHttpConnect(connection, listen, httpStr))
                                         successNegotiation = true;
