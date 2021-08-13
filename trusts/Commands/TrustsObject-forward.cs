@@ -85,6 +85,7 @@ namespace trusts
                 command.syntaxError = false;
             }
 
+            /// <summary>Информация о прокси-сервере на который будет проихсодить перенаправление</summary>
             public readonly ForwardingInfo fi = null;
 
                                                                         /// <summary>Имя подкоманды</summary>

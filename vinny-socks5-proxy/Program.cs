@@ -16,7 +16,7 @@ namespace vinnysocks5proxy
 {
     partial class MainClass
     {
-        public static string version = "2021-0725";
+        public static string version = "2021-0813";
 
         public static bool   toTerminate = false;
         public static bool   isError     = false;

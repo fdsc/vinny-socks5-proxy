@@ -113,6 +113,9 @@ namespace vinnysocks5proxy
                                     {
                                         if (doHttpWithoutConnect(connection, listen, httpStr, b, offset))
                                             successNegotiation = true;
+
+                                        // Делаем здесь выход, чтобы лишний раз не логировать ошибки. Т.к. ниже идёт логирование, которое, скорее всего, выше тоже залогировано
+                                        return;
                                     }
 
                                     if (successNegotiation)
