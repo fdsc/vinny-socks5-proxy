@@ -20,11 +20,6 @@ namespace vinnysocks5proxy
         public IPEndPoint ipe             = default;
         public TrustsFile trusts_domain   = null;
 
-        public class ForwardingInfo
-        {
-            public string     forwarding      = null;
-            public int        forwardingPort  = 0;
-        }
         public ForwardingInfo forwarding = null;
 
         public SortedList<string, string> users   = new SortedList<string, string>();

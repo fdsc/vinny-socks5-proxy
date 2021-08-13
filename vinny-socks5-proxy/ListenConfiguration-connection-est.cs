@@ -10,6 +10,7 @@ using static trusts.Helper;
 using cryptoprime;
 using System.Text;
 using System.Diagnostics;
+using trusts;
 
 namespace vinnysocks5proxy
 {
@@ -280,7 +281,7 @@ namespace vinnysocks5proxy
                                         
                                         LogForConnection("Request for connection to " + addr + ":" + ConnectToPort, connection, 3);
 
-                                        if (!ConnectByIP(addr, ConnectToPort, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
+                                        if (!ConnectByIP(addr, ConnectToPort, listen.forwarding, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
                                         {
                                             return;
                                         }
@@ -334,7 +335,7 @@ namespace vinnysocks5proxy
                                         }
                                     }
 
-                                    GetSocketForTarget(connection, ConnectToPort, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domainName);
+                                    GetSocketForTarget(connection, ConnectToPort, listen.forwarding, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domainName);
                                 }
 
                                 bb.Clear();
@@ -405,7 +406,7 @@ namespace vinnysocks5proxy
                 return httpStr;
             }
 
-            public void GetSocketForTarget(Socket connection, int ConnectToPort, ref bool connected, ref int networkUnreachable, ref int connectionRefused, ref int anotherError, string domainName)
+            public void GetSocketForTarget(Socket connection, int ConnectToPort, ForwardingInfo fi, ref bool connected, ref int networkUnreachable, ref int connectionRefused, ref int anotherError, string domainName)
             {
                 var addresses = Dns.GetHostAddresses(domainName);
 
@@ -415,7 +416,7 @@ namespace vinnysocks5proxy
                     LogForConnection("Try connection to " + addr + ":" + ConnectToPort, connection, 4);
                     try
                     {
-                        if (!ConnectByIP(addr, ConnectToPort, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
+                        if (!ConnectByIP(addr, ConnectToPort, fi, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
                             continue;
 
                         connectToSocks += "\t" + connectionTo.LocalEndPoint + " -> " + connectionTo.RemoteEndPoint + "";

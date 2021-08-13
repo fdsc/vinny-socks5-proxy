@@ -222,7 +222,7 @@ namespace vinnysocks5proxy
                                 goto forwarding_error;
                             }
 
-                            current.forwarding = new ListenConfiguration.ForwardingInfo();
+                            current.forwarding = new ForwardingInfo();
 
                             current.forwarding.forwardingPort = int.Parse(addr[1].Trim());
                             current.forwarding.forwarding     = addr[2].Trim();

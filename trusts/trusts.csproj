@@ -51,6 +51,7 @@
     <Compile Include="Commands\TrustsObject-transitions.cs" />
     <Compile Include="Commands\DomainName.cs" />
     <Compile Include="Commands\TrustsObject-set.cs" />
+    <Compile Include="ForwardingInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="example.trusts">

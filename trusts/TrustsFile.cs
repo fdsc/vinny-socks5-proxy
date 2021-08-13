@@ -111,7 +111,7 @@ namespace trusts
         /// <summary>Определяет, соответствует ли политике доменных имён данная строка</summary>
         /// <returns>True, если имя соответствует политике</returns>
         /// <param name="domainName">Проверяемое доменное имя</param>
-        public bool Compliance(string domainName)
+        public bool Compliance(string domainName, ref ForwardingInfo fi)
         {
             lock (this)
             {
@@ -123,7 +123,7 @@ namespace trusts
                     if (c <= ' ')
                         return false;
 
-                return root.Compliance(domainName);
+                return root.Compliance(domainName, ref fi);
             }
         }
 

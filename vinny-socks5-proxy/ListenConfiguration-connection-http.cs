@@ -150,7 +150,7 @@ namespace vinnysocks5proxy
                     bool connected = false;
                     int networkUnreachable = 0, connectionRefused = 0, anotherError = 0;
                     // Перебираем возможные адреса соединения, если с одним не удалось соединить
-                    GetSocketForTarget(connection, port, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domain);
+                    GetSocketForTarget(connection, port, listen.forwarding, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domain);
 
                     // Если произошла ошибка
                     if (!connected)
@@ -351,7 +351,7 @@ namespace vinnysocks5proxy
                     bool connected = false;
                     int networkUnreachable = 0, connectionRefused = 0, anotherError = 0;
                     // Перебираем возможные адреса соединения, если с одним не удалось соединить
-                    GetSocketForTarget(connection, port, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domain);
+                    GetSocketForTarget(connection, port, listen.forwarding, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domain);
 
                     // Если произошла ошибка
                     if (!connected)

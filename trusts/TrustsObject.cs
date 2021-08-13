@@ -208,7 +208,7 @@ namespace trusts
         /// <summary>Определяет, соответствует ли политике доменных имён данная строка</summary>
         /// <returns>True, если имя соответствует политике</returns>
         /// <param name="domainName">Проверяемое доменное имя</param>
-        public bool Compliance(string domainName)
+        public bool Compliance(string domainName, ref ForwardingInfo fi)
         {
             var Name        = new DomainName(domainName);
             var commandType = Command.CommandType.reject;
