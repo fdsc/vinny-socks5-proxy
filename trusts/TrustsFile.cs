@@ -111,6 +111,7 @@ namespace trusts
         /// <summary>Определяет, соответствует ли политике доменных имён данная строка</summary>
         /// <returns>True, если имя соответствует политике</returns>
         /// <param name="domainName">Проверяемое доменное имя</param>
+        /// <param name="fi">Информайция о перенаправлении на другой прокси-сервер</param>
         public bool Compliance(string domainName, ref ForwardingInfo fi)
         {
             lock (this)
@@ -313,7 +314,8 @@ namespace trusts
                                     break;
 
                                 // Копия команд в TrustsObject-Directive.cs и папке Commands
-                                case "set":
+                                case "forward":
+                                case "forwarding":
                                         if (currentObject == null)
                                         {
                                             logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
@@ -329,9 +331,9 @@ namespace trusts
                                             return null;
                                         }
 
-                                        currentCommand = new Directive("set", nLine[1], isNegative, currentObject, i+1);
+                                        currentCommand = new Directive("forward", nLine[1], isNegative, currentObject, i+1);
 
-                                        currentCommand.SubCommand = new SetCommand(currentCommand, i+1);
+                                        currentCommand.SubCommand = new ForwardCommand(currentCommand, i+1);
 
                                         if (currentCommand.syntaxError)
                                         {

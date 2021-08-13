@@ -75,10 +75,11 @@ namespace vinnysocks5proxy
                     connectToSocks = "(" + domain + ")\t" + connectToSocks;
                     LogForConnection("Request for connection to '" + domain + "'", connection, 3);
 
+                    var fw = listen.forwarding;
                     // Проверяем, разрешён ли данный домен
                     if (listen.trusts_domain != null)
                     {
-                        if (!listen.trusts_domain.Compliance(domain))
+                        if (!listen.trusts_domain.Compliance(domain, ref fw))
                         {
                             LogForConnection($"Domain '{domain}' is denied", connection, 1);
                             SendHttpResponse("403 Forbidden", connection);
@@ -150,7 +151,7 @@ namespace vinnysocks5proxy
                     bool connected = false;
                     int networkUnreachable = 0, connectionRefused = 0, anotherError = 0;
                     // Перебираем возможные адреса соединения, если с одним не удалось соединить
-                    GetSocketForTarget(connection, port, listen.forwarding, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domain);
+                    GetSocketForTarget(connection, port, fw, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domain);
 
                     // Если произошла ошибка
                     if (!connected)
@@ -334,10 +335,11 @@ namespace vinnysocks5proxy
                     connectToSocks = "(" + domain + ")\t" + connectToSocks;
                     LogForConnection("web-request for connection to '" + domain + "'", connection, 3);
 
+                    var fw = listen.forwarding;
                     // Проверяем, разрешён ли данный домен
                     if (listen.trusts_domain != null)
                     {
-                        if (!listen.trusts_domain.Compliance(domain))
+                        if (!listen.trusts_domain.Compliance(domain, ref fw))
                         {
                             LogForConnection($"Domain '{domain}' is denied", connection, 1);
                             SendHttpResponse("403 Forbidden", connection);
@@ -351,7 +353,7 @@ namespace vinnysocks5proxy
                     bool connected = false;
                     int networkUnreachable = 0, connectionRefused = 0, anotherError = 0;
                     // Перебираем возможные адреса соединения, если с одним не удалось соединить
-                    GetSocketForTarget(connection, port, listen.forwarding, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domain);
+                    GetSocketForTarget(connection, port, fw, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domain);
 
                     // Если произошла ошибка
                     if (!connected)

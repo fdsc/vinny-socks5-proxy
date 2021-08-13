@@ -17,6 +17,7 @@
 :must:exactly:d[:1]
 yandex.ru
 
+# Для отмены forward-директивы, если такая есть в conf-файле
+# :forward:socks5:none:
 
 :end:allowed domains
-

@@ -50,7 +50,7 @@
     <Compile Include="Commands\Priority.cs" />
     <Compile Include="Commands\TrustsObject-transitions.cs" />
     <Compile Include="Commands\DomainName.cs" />
-    <Compile Include="Commands\TrustsObject-set.cs" />
+    <Compile Include="Commands\TrustsObject-forward.cs" />
     <Compile Include="ForwardingInfo.cs" />
   </ItemGroup>
   <ItemGroup>

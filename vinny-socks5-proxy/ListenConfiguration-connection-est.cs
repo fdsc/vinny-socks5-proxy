@@ -72,7 +72,7 @@ namespace vinnysocks5proxy
 
                             // Установление соединения
                             // Ожидаем байты коннекта по socks5 https://datatracker.ietf.org/doc/html/rfc1928
-                            var available = waitAvailableBytes(3, timeout: int.MaxValue);
+                            var available = waitAvailableBytes(connection, 3);
 
                             if (available == 0)
                                 return;
@@ -154,7 +154,7 @@ namespace vinnysocks5proxy
                                 // Выдаём клиенту подтверждение аутентификации
                                 connection.Send(PwdAuthMethodResponse);
                                 // Получаем два первых байта: версию протокола аутентификации, и длину имени пользователя
-                                waitAvailableBytes(2);
+                                waitAvailableBytes(connection, 2);
                                 connection.Receive(b, 2, SocketFlags.None);
 
                                 if (b[0] != 0x01)
@@ -165,12 +165,12 @@ namespace vinnysocks5proxy
 
                                 // Получаем имя пользователя
                                 var userNameLen = b[1];
-                                waitAvailableBytes(userNameLen);
+                                waitAvailableBytes(connection, userNameLen);
                                 connection.Receive(b, userNameLen, SocketFlags.None);
                                 var user = asciiEncoding.GetString(b, 0, userNameLen);
 
                                 // Получаем длину пароля и сам пароль
-                                waitAvailableBytes(1);
+                                waitAvailableBytes(connection, 1);
                                 connection.Receive(b, 1, SocketFlags.None);
                                 var pwdLen = b[0];
                                 connection.Receive(b, pwdLen, SocketFlags.None);
@@ -197,7 +197,7 @@ namespace vinnysocks5proxy
                                 connection.Send(new byte[] { 0x01, 0x00 });
                             }
 
-                            available = waitAvailableBytes(7);
+                            available = waitAvailableBytes(connection, 7);
                             if (available == 0)
                                 return;
 
@@ -262,9 +262,9 @@ namespace vinnysocks5proxy
 
                             var ConnectToPort = b[available - 1] + (b[available - 2] << 8);
 
+                            var fw = listen.forwarding;
                             try
                             {
-
                                 // Смотрим, какой именно адрес и готовим для него почву
                                 bool connected = false;
                                 int networkUnreachable = 0;
@@ -277,11 +277,10 @@ namespace vinnysocks5proxy
 
                                     try
                                     {
-                                        // Устанавливает connectionTo
-                                        
                                         LogForConnection("Request for connection to " + addr + ":" + ConnectToPort, connection, 3);
 
-                                        if (!ConnectByIP(addr, ConnectToPort, listen.forwarding, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
+                                        // Устанавливает connectionTo
+                                        if (!ConnectByIP(addr, ConnectToPort, fw, null, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
                                         {
                                             return;
                                         }
@@ -327,7 +326,7 @@ namespace vinnysocks5proxy
 
                                     if (listen.trusts_domain != null)
                                     {
-                                        if (!listen.trusts_domain.Compliance(domainName))
+                                        if (!listen.trusts_domain.Compliance(domainName, ref fw))
                                         {
                                             LogForConnection($"Domain '{domainName}' is denied", connection, 1);
                                             processResponseForRequest(bb, EC_Denied);
@@ -335,7 +334,7 @@ namespace vinnysocks5proxy
                                         }
                                     }
 
-                                    GetSocketForTarget(connection, ConnectToPort, listen.forwarding, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domainName);
+                                    GetSocketForTarget(connection, ConnectToPort, fw, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domainName);
                                 }
 
                                 bb.Clear();
@@ -408,31 +407,45 @@ namespace vinnysocks5proxy
 
             public void GetSocketForTarget(Socket connection, int ConnectToPort, ForwardingInfo fi, ref bool connected, ref int networkUnreachable, ref int connectionRefused, ref int anotherError, string domainName)
             {
-                var addresses = Dns.GetHostAddresses(domainName);
-
-                // Перебираем возможные адреса соединения, если с одним не удалось соединить
-                foreach (var addr in addresses)
+                IPAddress[] addresses = null;
+                // Если нет перенаправления на другой прокси, то сами разрешаем доменное имя
+                if (fi == null)
                 {
-                    LogForConnection("Try connection to " + addr + ":" + ConnectToPort, connection, 4);
-                    try
-                    {
-                        if (!ConnectByIP(addr, ConnectToPort, fi, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
-                            continue;
+                    addresses = Dns.GetHostAddresses(domainName);
 
-                        connectToSocks += "\t" + connectionTo.LocalEndPoint + " -> " + connectionTo.RemoteEndPoint + "";
-                        break;
+                    // Перебираем возможные адреса соединения, если с одним не удалось соединить
+                    foreach (var addr in addresses)
+                    {
+                        LogForConnection("Try connection to " + addr + ":" + ConnectToPort, connection, 4);
+                        try
+                        {
+                            if (!ConnectByIP(addr, ConnectToPort, fi, null, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
+                                continue;
+    
+                            connectToSocks += "\t" + connectionTo.LocalEndPoint + " -> " + connectionTo.RemoteEndPoint + "";
+                            break;
+                        }
+                        catch (SocketException e)
+                        {
+                            if (e.ErrorCode == 10061)
+                                connectionRefused++;
+                            else
+                            if (e.ErrorCode == 10051)
+                                networkUnreachable++;
+                            else
+                                anotherError++;
+    
+                            LogForConnection("Error with try " + addr + ":" + ConnectToPort + "\r\n" + e.Message, connection, 3);
+                        }
                     }
-                    catch (SocketException e)
+                }
+                // Если есть перенаправление на другой прокси, то передаём ему доменное имя нетронутым
+                else
+                {
+                    if (!ConnectByIP(null, ConnectToPort, fi, domainName, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
                     {
-                        if (e.ErrorCode == 10061)
-                            connectionRefused++;
-                        else
-                        if (e.ErrorCode == 10051)
-                            networkUnreachable++;
-                        else
-                            anotherError++;
-
-                        LogForConnection("Error with try " + addr + ":" + ConnectToPort + "\r\n" + e.Message, connection, 3);
+                        anotherError++;
+                        return;
                     }
                 }
             }
@@ -509,7 +522,7 @@ namespace vinnysocks5proxy
                 }
 
                 var response = bb.getBytes();
-                connection.Send(response, 0, response.Length, SocketFlags.None);
+                connection?.Send(response, 0, response.Length, SocketFlags.None);
             }
             
             public void Pulse()

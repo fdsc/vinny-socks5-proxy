@@ -208,6 +208,7 @@ namespace trusts
         /// <summary>Определяет, соответствует ли политике доменных имён данная строка</summary>
         /// <returns>True, если имя соответствует политике</returns>
         /// <param name="domainName">Проверяемое доменное имя</param>
+        /// <param name="fi">Информайция о перенаправлении на другой прокси-сервер</param>
         public bool Compliance(string domainName, ref ForwardingInfo fi)
         {
             var Name        = new DomainName(domainName);
@@ -218,19 +219,19 @@ namespace trusts
             if (Name.syntaxError)
                 return false;
 
-            Complains(Name, ref commandType, ref priority, root);
+            Complains(Name, ref commandType, ref priority, root, ref fi);
 
             return commandType == Command.CommandType.accept;
         }
 
-        private TrustsProgramContinuation Complains(DomainName domainName, ref Command.CommandType commandType, ref Priority priority, TrustsObject root)
+        private TrustsProgramContinuation Complains(DomainName domainName, ref Command.CommandType commandType, ref Priority priority, TrustsObject root, ref ForwardingInfo fi)
         {
             foreach (var cmd in root.commands)
             {
                 var returnTypeTrue  = cmd.isNegative ? TrustsProgramContinuation.@false : TrustsProgramContinuation.@true;
                 var returnTypeFalse = cmd.isNegative ? TrustsProgramContinuation.@true  : TrustsProgramContinuation.@false;
 
-                if (cmd.SubCommand == null && cmd.Name == "info")
+                if (cmd.Name == "info")
                 {
                     logger.Log(cmd.Parameter, domainName.Name + " (trusts info command at line " + cmd.LineNumber + ")", ErrorReporting.LogTypeCode.Wargning, "trustsFile.info");
                 }
@@ -238,7 +239,7 @@ namespace trusts
                 if (cmd.SubCommand is Compare)
                 {
                     var cmp = cmd.SubCommand as Compare;
-                    var cmpResult = Compliance(domainName, cmp);
+                    var cmpResult = Compliance(domainName, cmp, ref fi);
                     if (!cmpResult && !cmp.maybe)
                         return returnTypeFalse;
                     else
@@ -250,15 +251,15 @@ namespace trusts
                 {
                     var trn = cmd.SubCommand as Transition;
 
-/*
-    call выполняет блоки из параметров до тех пор, пока один из них не вернёт true
-        Если никто не вернул true, завершает выполнение текущего блока с возвращаемым результатом false
-
-    stop выполняет блоки до тех пор, пока один из блоков не вернёт true. Тогда возвращает вверх коамнду stop (останов проверок)
-
-    return выполняет блоки до тех пор, пока один из них не вернёт true.
-        Если никто не вернул true, то продолжает работу блока. В противном случае, возвращает true
-*/
+                    /*
+                        call выполняет блоки из параметров до тех пор, пока один из них не вернёт true
+                            Если никто не вернул true, завершает выполнение текущего блока с возвращаемым результатом false
+                    
+                        stop выполняет блоки до тех пор, пока один из блоков не вернёт true. Тогда возвращает вверх коамнду stop (останов проверок)
+                    
+                        return выполняет блоки до тех пор, пока один из них не вернёт true.
+                            Если никто не вернул true, то продолжает работу блока. В противном случае, возвращает true
+                    */
                     if (trn.Type == Transition.TransitionType.error)
                     {
                         logger.Log($"Error occured: {trn.Parameter}", "", ErrorReporting.LogTypeCode.SmallError, "trustsFile.check.errorCommand");
@@ -271,7 +272,7 @@ namespace trusts
                         foreach (var blockName in trn.parametres)
                         {
                             // Делаем переход на другой блок
-                            var result = Complains(domainName, ref commandType, ref priority, root.rootCollection[blockName]);
+                            var result = Complains(domainName, ref commandType, ref priority, root.rootCollection[blockName], ref fi);
 
                             // Если внутри обрабатываемого блока сработала команда stop, передаём её выше
                             if (result == TrustsProgramContinuation.stop)
@@ -303,7 +304,7 @@ namespace trusts
                     else
                     {
                         // Делаем переход на другой блок
-                        var result = Complains(domainName, ref commandType, ref priority, root.rootCollection[trn.Parameter]);
+                        var result = Complains(domainName, ref commandType, ref priority, root.rootCollection[trn.Parameter], ref fi);
 
                         // Если внутри обрабатываемого блока сработала команда stop, передаём её выше
                         if (result == TrustsProgramContinuation.stop)
@@ -345,6 +346,13 @@ namespace trusts
                     }
                 }
                 else
+                if (cmd.SubCommand is ForwardCommand)
+                {
+                    // Это команда перенаправления на другой прокси. Не имеет приоритетов, выполняется немедленно
+                    var command = cmd.SubCommand as ForwardCommand;
+                    fi = command.fi;
+                }
+                else
                 {
                     throw new Exception();
                 }
@@ -358,7 +366,8 @@ namespace trusts
         /// <returns>True, если домен соответствует правилу (найдены совпадения)</returns>
         /// <param name="domainName">Домен для проверки</param>
         /// <param name="compare">Команда, на соответствие которой проверяется домен</param>
-        public bool Compliance(DomainName domainName, Compare compare)
+        /// <param name="fi">Информайция о перенаправлении на другой прокси-сервер</param>
+        public bool Compliance(DomainName domainName, Compare compare, ref ForwardingInfo fi)
         {
             var domain = domainName[compare.StartIndex, compare.EndIndex];
             var dsplit = compare.splitRegime == Compare.SplitRegime.splitted ? domainName.Splitted(compare.StartIndex, compare.EndIndex) : null;

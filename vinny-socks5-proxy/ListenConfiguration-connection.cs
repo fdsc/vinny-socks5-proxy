@@ -27,7 +27,7 @@ namespace vinnysocks5proxy
             /// <summary>Время последней активности по счётчику MainClass.TimeCounter</summary>
             public volatile int LastActiveConnectionTimerCounter = 0;
 
-            public int waitAvailableBytes(int minBytes = 1, int timeout = 100, int countOfTimeouts = 100)
+            public int waitAvailableBytes(Socket connection, int minBytes = 1, int timeout = 100, int countOfTimeouts = 100)
             {
                 int available = 0;
                 // lock (connection)
@@ -37,6 +37,7 @@ namespace vinnysocks5proxy
                     while (available < minBytes)
                     {
                         try { lock (connection) Monitor.Wait(connection, timeout); } catch { }
+                        // Thread.Sleep(timeout);
 
                         if (connection == null || isDisposed || doTerminate)
                             return 0;
