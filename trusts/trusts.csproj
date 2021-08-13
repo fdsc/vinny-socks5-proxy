@@ -50,6 +50,7 @@
     <Compile Include="Commands\Priority.cs" />
     <Compile Include="Commands\TrustsObject-transitions.cs" />
     <Compile Include="Commands\DomainName.cs" />
+    <Compile Include="Commands\TrustsObject-set.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="example.trusts">

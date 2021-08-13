@@ -237,6 +237,7 @@ namespace vinnysocks5proxy
                                 return;
                             }
 
+                            // См. ниже, код сообщения об ошибке дублируется
                             if (addressType == 0x01 && !listen.namesGranted_ipv4)
                             {
                                 LogErrorForConnection($"ipv4 address is denied by configuration", connection, b, available);
@@ -253,7 +254,6 @@ namespace vinnysocks5proxy
 
                             if (addressType == 0x04 && !listen.namesGranted_ipv6)
                             {
-                                processResponseForRequest(bb, EC_Address_type_not_supported);
                                 LogErrorForConnection($"ipv6 address is denied by configuration", connection, b, available);
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
                                 return;
@@ -301,6 +301,22 @@ namespace vinnysocks5proxy
                                     bb.addWithCopy(b, -1, 5, 5 + b[4]);
                                     var domainName = asciiEncoding.GetString(bb.getBytes());
                                     connectToSocks = "(" + domainName + ")\t" + connectToSocks;
+
+                                    // Проверяем, что здесь не передан IPv4 адрес вместо домена
+                                    if (!listen.namesGranted_ipv4 && isIPv4(domainName))
+                                    {
+                                        LogErrorForConnection($"ipv4 addresses ({domainName}) is denied by configuration", connection, b, available);
+                                        processResponseForRequest(bb, EC_Address_type_not_supported);
+                                        return;
+                                    }
+
+                                    // Проверяем, что здесь не передан IPv6 адрес вместо домена
+                                    if (!listen.namesGranted_ipv6 && isIPv6(domainName))
+                                    {
+                                        LogErrorForConnection($"ipv6 address is denied by configuration", connection, b, available);
+                                        processResponseForRequest(bb, EC_Address_type_not_supported);
+                                        return;
+                                    }
 
                                     LogForConnection("Request for connection to '" + domainName + "'", connection, 3);
 

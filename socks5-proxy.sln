@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vinny-socks5-proxy", "vinny
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "trusts", "trusts\trusts.csproj", "{23169591-2557-40A4-A8F1-46B0992E4E8B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "tests", "tests\tests.csproj", "{030CC348-EC42-451F-84BC-22AB8FD47063}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -24,5 +26,11 @@ Global
 		{23169591-2557-40A4-A8F1-46B0992E4E8B}.Release|x86.Build.0 = Release|Any CPU
 		{23169591-2557-40A4-A8F1-46B0992E4E8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23169591-2557-40A4-A8F1-46B0992E4E8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{030CC348-EC42-451F-84BC-22AB8FD47063}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{030CC348-EC42-451F-84BC-22AB8FD47063}.Debug|x86.Build.0 = Debug|Any CPU
+		{030CC348-EC42-451F-84BC-22AB8FD47063}.Release|x86.ActiveCfg = Release|Any CPU
+		{030CC348-EC42-451F-84BC-22AB8FD47063}.Release|x86.Build.0 = Release|Any CPU
+		{030CC348-EC42-451F-84BC-22AB8FD47063}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{030CC348-EC42-451F-84BC-22AB8FD47063}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

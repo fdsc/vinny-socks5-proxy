@@ -72,6 +72,15 @@ namespace trusts
                 // Проходим по всем командам блоков
                 foreach (var cmd in block.Value.commands)
                 {
+                    // Контролируем, что ни у какой команды нет синтаксической ошибки
+                    // Ошибка может возникнуть уже после добавления команды - при добавлении параметров, поэтому мы можем заметить её уже только здесь
+                    // Логирование такой ошибки оставляется на реализацию переопределяемого метода SubCommand.addParameter и к этому моменту времени уже должно было бы произойти
+                    if (cmd.syntaxError)
+                    {
+                        logger.Log($"Error in command at line {cmd.LineNumber} (parameters error)", block.Key, ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                        return false;
+                    }
+
                     // Пропускаем команды логирования
                     if (cmd.SubCommand == null && cmd.Name == "info")
                         continue;

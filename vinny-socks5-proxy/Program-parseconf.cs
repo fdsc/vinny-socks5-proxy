@@ -183,7 +183,7 @@ namespace vinnysocks5proxy
                     case "domain":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
-                            
+
                         if (pVal == "reject")
                             current.namesGranted_domain = false;
                         else
@@ -195,6 +195,42 @@ namespace vinnysocks5proxy
                             Console.Error.WriteLine("ipv4 must be 'accept' or 'reject' but have " + pVal);
                             return false;
                         }
+                        break;
+
+                    forwarding_error:
+                        Console.Error.WriteLine("forwarding configuration error: only socks5 support. Example: socks5:8080:127.0.0.1 (socks5:port:address)");
+                        Console.Error.WriteLine("error in conf file " + confFilePath);
+                        return false;
+
+                    case "forward":
+                    case "forwarding":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+
+                        if (!pVal.StartsWith("socks5:"))
+                            goto forwarding_error;
+
+                        var addr = pVal.Split(new string[] { ":" }, 3, StringSplitOptions.None);
+                        if (addr.Length != 3)
+                            goto forwarding_error;
+
+                        try
+                        {
+                            current.forwardingPort = int.Parse(addr[1].Trim());
+                            current.forwarding     = addr[2].Trim();
+
+                            if (  !isIPv4(current.forwarding)  )
+                            {
+                                Console.WriteLine("forwarding is supported only IPv4 addresses");
+                                goto forwarding_error;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine(ex.Message);
+                            goto forwarding_error;
+                        }
+
                         break;
 
                     case "Timeoutsendtotarget":

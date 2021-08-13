@@ -115,6 +115,14 @@ namespace trusts
         {
             lock (this)
             {
+                if (domainName.Contains("@") || domainName.Contains(":"))
+                    return false;
+
+                // Если доменное имя содержит служебные символы или пробелы
+                foreach  (var c in domainName)
+                    if (c <= ' ')
+                        return false;
+
                 return root.Compliance(domainName);
             }
         }
@@ -302,6 +310,37 @@ namespace trusts
                                         // logger.Log($"Parsed command '{currentCommand.Name}' with subcommand '{currentCommand.SubCommand.ToString()}'", "", ErrorReporting.LogTypeCode.Usually, "trustsFile.parse");
                                         currentObject.commands.Add(currentCommand);
                                         currentCommand = null;
+                                    break;
+
+                                // Копия команд в TrustsObject-Directive.cs и папке Commands
+                                case "set":
+                                        if (currentObject == null)
+                                        {
+                                            logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                            return null;
+                                        }
+        
+                                        isNegative = false;
+                                        if (nLine[1].ToLowerInvariant().StartsWith("not:"))
+                                        {
+                                            nLine[1]   = nLine[1].Substring(startIndex: 4);
+                                            isNegative = true;
+                                            logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but the command can not be negative'", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                            return null;
+                                        }
+
+                                        currentCommand = new Directive("set", nLine[1], isNegative, currentObject, i+1);
+
+                                        currentCommand.SubCommand = new SetCommand(currentCommand, i+1);
+
+                                        if (currentCommand.syntaxError)
+                                        {
+                                            logger.Log($"TrustsObject.Parse error at line {i+1}. In '{cmd}' command a syntax error found", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                            return null;
+                                        }
+
+                                        // logger.Log($"Parsed command '{currentCommand.Name}' with subcommand '{currentCommand.SubCommand.ToString()}'", "", ErrorReporting.LogTypeCode.Usually, "trustsFile.parse");
+                                        currentObject.commands.Add(currentCommand);
                                     break;
     
                                 default:
