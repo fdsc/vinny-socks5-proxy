@@ -216,10 +216,18 @@ namespace vinnysocks5proxy
 
                         try
                         {
-                            current.forwardingPort = int.Parse(addr[1].Trim());
-                            current.forwarding     = addr[2].Trim();
+                            if (current.forwarding != null)
+                            {
+                                Console.WriteLine("forwarding directive duplication");
+                                goto forwarding_error;
+                            }
 
-                            if (  !isIPv4(current.forwarding)  )
+                            current.forwarding = new ListenConfiguration.ForwardingInfo();
+
+                            current.forwarding.forwardingPort = int.Parse(addr[1].Trim());
+                            current.forwarding.forwarding     = addr[2].Trim();
+
+                            if (  !isIPv4(current.forwarding.forwarding)  )
                             {
                                 Console.WriteLine("forwarding is supported only IPv4 addresses");
                                 goto forwarding_error;

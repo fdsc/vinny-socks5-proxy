@@ -138,7 +138,7 @@ namespace vinnysocks5proxy
                             // Обработка ошибки
                             // Посылаем сообщение о том, что ни один из методов не подходит
                             connection.Send(ErrorAuthMethodResponse);
-                            LogErrorForConnection($"The correct authorization method was not found (check user and password in client and in server)", connection, b, available);
+                            LogErrorForConnection($"The correct authorization method ({method}) was not found (check user and password in client and in server)", connection, b, available);
 
                             return;
 
@@ -272,20 +272,24 @@ namespace vinnysocks5proxy
                                 if (addressType == 0x01 || addressType == 0x04) // Это IP-адреса
                                 {
                                     bb.addWithCopy(b, -1, 4, available - 2);
-                                    var ConnectToIP = new IPAddress(bb.getBytes());
-                                    connectionTo = new Socket(ConnectToIP.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                                    var ipe = new IPEndPoint(ConnectToIP, ConnectToPort);
-                                    connectToSocks += "\t(" + ipe + ")";
+                                    var addr = new IPAddress(bb.getBytes());
 
                                     try
                                     {
-                                        LogForConnection("Request for connection to " + ipe, connection, 3);
-                                        connectionTo.Connect(ipe);
+                                        // Устанавливает connectionTo
+                                        
+                                        LogForConnection("Request for connection to " + addr + ":" + ConnectToPort, connection, 3);
+
+                                        if (!ConnectByIP(addr, ConnectToPort, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
+                                        {
+                                            return;
+                                        }
+
                                         connected = true;
                                     }
                                     catch (SocketException e)
                                     {
-                                        LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 2);
+                                        LogForConnection("Error with try " + addr + ":" + ConnectToPort + "\r\n" + e.Message, connection, 2);
                                         return;
                                     }
                                 }
@@ -408,15 +412,13 @@ namespace vinnysocks5proxy
                 // Перебираем возможные адреса соединения, если с одним не удалось соединить
                 foreach (var addr in addresses)
                 {
-                    connectionTo = new Socket(addr.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-                    var ipe = new IPEndPoint(addr, ConnectToPort);
-
-                    LogForConnection("Try connection to " + ipe, connection, 4);
+                    LogForConnection("Try connection to " + addr + ":" + ConnectToPort, connection, 4);
                     try
                     {
-                        connectionTo.Connect(ipe);
-                        connected = true;
-                        connectToSocks += "\t" + connectionTo.LocalEndPoint + " -> " + ipe + "";
+                        if (!ConnectByIP(addr, ConnectToPort, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError))
+                            continue;
+
+                        connectToSocks += "\t" + connectionTo.LocalEndPoint + " -> " + connectionTo.RemoteEndPoint + "";
                         break;
                     }
                     catch (SocketException e)
@@ -429,7 +431,7 @@ namespace vinnysocks5proxy
                         else
                             anotherError++;
 
-                        LogForConnection("Error with try " + ipe + "\r\n" + e.Message, connection, 3);
+                        LogForConnection("Error with try " + addr + ":" + ConnectToPort + "\r\n" + e.Message, connection, 3);
                     }
                 }
             }
