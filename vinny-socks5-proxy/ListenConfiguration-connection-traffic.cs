@@ -62,11 +62,12 @@ namespace vinnysocks5proxy
                 {
                     if (e.SocketError != SocketError.Success)
                         LogForConnection("Socket error " + e.SocketError, connection, 3);
-                        
+
                     if (e.BytesTransferred == 0)
                     {
-                        LogForConnection("The socket did not transmit any data (from client) and will be shutdown", connection, 4);
+                        LogForConnection("The socket did not transmit any data (from client) and will be shutdown", e.ConnectSocket, 4);
                         Dispose();
+
                         return;
                     }
 
@@ -159,7 +160,7 @@ namespace vinnysocks5proxy
 
                     if (e.BytesTransferred == 0)
                     {
-                        LogForConnection("The socket did not transmit any data (from target server) and will be shutdown", connection, 4);
+                        LogForConnection("The socket did not transmit any data (from target server) and will be shutdown", e.ConnectSocket, 4);
 
                         if (isEstablished)
                             Dispose();

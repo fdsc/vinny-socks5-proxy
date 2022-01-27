@@ -36,7 +36,7 @@ namespace vinnysocks5proxy
                 if (!getFromConfFile(args) || args.Length >= 2)
                 {
                     Console.WriteLine(getHelpString());
-                    Log("Incorrect .conf file");
+                    Log("Incorrect .conf file (or error at open conf file or log file)");
                     return 1;
                 }
 
