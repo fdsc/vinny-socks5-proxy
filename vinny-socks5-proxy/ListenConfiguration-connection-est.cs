@@ -244,8 +244,20 @@ namespace vinnysocks5proxy
                             // См. ниже, код сообщения об ошибке дублируется
                             if (addressType == 0x01 && !listen.namesGranted_ipv4)
                             {
-                                LogErrorForConnection($"ipv4 address is denied by configuration", connection, b, available);
+                                var str = "";
+                                try
+                                {
+                                    bb.addWithCopy(b, -1, 4, available - 2);
+                                    var addrE = new IPAddress(bb.getBytes());
+                                    str = " ( " + addrE.ToString() + " )";
+                                }
+                                finally
+                                {
+                                    LogErrorForConnection($"ipv4 address is denied by configuration" + str, connection, b, available);
+                                }
+
                                 processResponseForRequest(bb, EC_Address_type_not_supported);
+
                                 return;
                             }
 
@@ -549,6 +561,17 @@ namespace vinnysocks5proxy
             public void LogForConnection(string Message, Socket connection, int debugLevel)
             {
                 listen.Log($"{connectToSocks}" + "\r\n" + Message, debugLevel);
+            }
+
+            public void LogDataForConnection(byte[] Message, int count, Socket connection, int debugLevel)
+            {
+                var str = "";
+                if (count <= 4096)
+                    str = Encoding.ASCII.GetString(Message, 0, count);
+                else
+                    str = Encoding.ASCII.GetString(Message, 0, 4096);
+
+                listen.Log($"{connectToSocks}" + "\r\n[[[start data]]]\r\n" + str + "\r\n[[[end data]]]\r\n", debugLevel);
             }
         }
 

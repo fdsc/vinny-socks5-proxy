@@ -74,7 +74,9 @@ namespace vinnysocks5proxy
                     SetLastActiveConnectionTimerCounter();
 
                     int sended = 0;
-    
+
+                    LogDataForConnection(e.Buffer, e.BytesTransferred, e.ConnectSocket, 7);
+
                     sended = connectionTo.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
                     SizeOfTransferredDataTo += sended;
     
@@ -172,6 +174,8 @@ namespace vinnysocks5proxy
 
                     int sended = 0;
     
+                    LogDataForConnection(e.Buffer, e.BytesTransferred, e.ConnectSocket, 6);
+
                     sended = connection.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
                     SizeOfTransferredDataFrom += sended;
     
