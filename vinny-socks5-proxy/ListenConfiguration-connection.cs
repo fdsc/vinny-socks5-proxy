@@ -98,10 +98,7 @@ namespace vinnysocks5proxy
                     lock (List_SpeedOfConnectionFrom)
                     {
                         SizeOfTransferredDataFrom += value;
-                        
-                        if (value > 1000*1000)
-                            value = value + 1;
-                        
+
                         clearListOfSpeedRecords(List_SpeedOfConnectionFrom, newRecord.time);
                         List_SpeedOfConnectionFrom.Add(newRecord);
                     }
@@ -129,8 +126,6 @@ namespace vinnysocks5proxy
                     foreach (var item in list)
                     {
                         summOfDataSizes += item.size;
-                        if (item.size > 1000*1000)
-                            summOfDataSizes = summOfDataSizes + 1;
                     }
 
                     return (summOfDataSizes * secondOfTime / duration);
