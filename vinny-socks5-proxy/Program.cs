@@ -109,6 +109,8 @@ namespace vinnysocks5proxy
             return isError ? 1000 : 0;
         }
 
+        public static          int WatchDogInterval  = 60;
+        public static          int WatchDogThreshold = 1400;
         public static volatile int TimeCounter = 0;
         static void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
@@ -120,7 +122,8 @@ namespace vinnysocks5proxy
                 TimeCounter++;
 
                 // Считаем остаток от деления на 128
-                var tm = TimeCounter & 0x7F;
+                // var tm = TimeCounter & 0x7F;
+                var tm = TimeCounter % WatchDogInterval;
                 if (tm == 0)    // Каждые две минуты, примерно
                 {
                     for (int i = 0; i < listens.Count; i++)
@@ -140,6 +143,25 @@ namespace vinnysocks5proxy
                         }
 
                         ls.Log("Watchdog timer: Count of connections in the listener " + ls.connections.Count, (cnt != ls.connections.Count || ls.connections.Count > 0) ? 2 : 3, trusts.ErrorReporting.LogTypeCode.Usually);
+                        foreach (var connection in ls.connections)
+                        {
+                            if
+                            (
+                                connection.SpeedOfConnectionTo > WatchDogThreshold
+                                ||
+                                connection.SpeedOfConnectionFrom > WatchDogThreshold
+                            )
+                            if (!connection.isDisposed)
+                            {
+                                var msg = new StringBuilder();
+                                msg.Append    ("Watchdog timer: connection ");
+                                msg.AppendLine(connection.connectToSocks);
+                                msg.AppendLine("Average speed to:   " + connection.SpeedOfConnectionTo_str);
+                                msg.AppendLine("Average speed from: " + connection.SpeedOfConnectionFrom_str);
+
+                                ls.Log(msg.ToString(), 2, trusts.ErrorReporting.LogTypeCode.Usually);
+                            }
+                        }
                     }
                 }
             }

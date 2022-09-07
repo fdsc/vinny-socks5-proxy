@@ -146,6 +146,32 @@ namespace vinnysocks5proxy
                             
                         break;
 
+                    case "watchdoginterval":
+                    
+                        if (!int.TryParse(pVal.Trim(), out int interval))
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("WatchDogInterval must be an integer: " + line);
+                            return false;
+                        }
+
+                        WatchDogInterval = interval;
+
+                        break;
+
+                    case "watchdogthreshold":
+                    
+                        if (!int.TryParse(pVal.Trim(), out int threshold))
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("WatchDogThreshold must be an integer: " + line);
+                            return false;
+                        }
+
+                        WatchDogThreshold = threshold;
+
+                        break;
+
                     case "ipv4":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
