@@ -21,7 +21,114 @@ namespace vinnysocks5proxy
             public long   SizeOfTransferredDataTo   = 0;
             public long   SizeOfTransferredDataFrom = 0;
             public readonly ListenConfiguration listen = null;
+
+            public class ConnectionSpeedRecord
+            {
+                public ConnectionSpeedRecord(long dataSize)
+                {
+                    this.size = dataSize;
+                    this.time = DateTime.Now;
+                }
+
+                public long     size;
+                public DateTime time;
+            }
+
+            protected List<ConnectionSpeedRecord> List_SpeedOfConnectionTo   = new List<ConnectionSpeedRecord>(128);
+            protected List<ConnectionSpeedRecord> List_SpeedOfConnectionFrom = new List<ConnectionSpeedRecord>(128);
+            public long SpeedOfConnectionTo
+            {
+                get
+                {
+                    lock (List_SpeedOfConnectionTo)
+                    {
+                        var now = DateTime.Now;
+
+                        clearListOfSpeedRecords(List_SpeedOfConnectionTo, now);
+                        return getSummOfListSpeedRecords(List_SpeedOfConnectionTo, now);
+                    }
+                }
+                set
+                {
+                    var newRecord  = new ConnectionSpeedRecord(value);
+
+                    lock (List_SpeedOfConnectionTo)
+                    {
+                        SizeOfTransferredDataTo += value;
+                        
+                        clearListOfSpeedRecords(List_SpeedOfConnectionTo, newRecord.time);
+                        List_SpeedOfConnectionTo.Add(newRecord);
+                    }
+                }
+            }
             
+            public long SpeedOfConnectionFrom
+            {
+                get
+                {
+                    lock (List_SpeedOfConnectionFrom)
+                    {
+                        var now = DateTime.Now;
+
+                        clearListOfSpeedRecords(List_SpeedOfConnectionFrom, now);
+                        return getSummOfListSpeedRecords(List_SpeedOfConnectionFrom, now);
+                    }
+                }
+                set
+                {
+                    var newRecord  = new ConnectionSpeedRecord(value);
+
+                    lock (List_SpeedOfConnectionFrom)
+                    {
+                        SizeOfTransferredDataFrom += value;
+                        
+                        clearListOfSpeedRecords(List_SpeedOfConnectionFrom, newRecord.time);
+                        List_SpeedOfConnectionFrom.Add(newRecord);
+                    }
+                }
+            }
+
+            readonly long secondOfTime     = 10000*1000;   // 10000*1000 - 1 секунда
+            readonly long obsolescenceTime = 60*secondOfTime;
+
+            protected long getSummOfListSpeedRecords(List<ConnectionSpeedRecord> list, DateTime now)
+            {
+                lock (list)
+                {
+                    if (list.Count <= 0)
+                        return 0;
+
+                    var earliestTime = list[0].time;
+                    var duration     = now.Ticks - earliestTime.Ticks;
+                    
+                    if (duration <= 0)
+                        return 0;
+
+
+                    long summOfDataSizes = 0;                    
+                    foreach (var item in list)
+                    {
+                        summOfDataSizes += item.size;
+                    }
+
+                    return (summOfDataSizes * secondOfTime / duration);
+                }
+            }
+
+            protected void clearListOfSpeedRecords(List<ConnectionSpeedRecord> list, DateTime now)
+            {
+                lock (list)
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var item = list[i];
+                    if (item.time.Ticks + obsolescenceTime < now.Ticks)
+                    {
+                        list.RemoveAt(i);
+                        i--;
+                    }
+                }
+            }
+
             public bool   isEstablished = false;
 
             /// <summary>Время последней активности по счётчику MainClass.TimeCounter</summary>

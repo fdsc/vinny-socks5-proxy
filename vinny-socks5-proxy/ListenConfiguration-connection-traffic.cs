@@ -78,8 +78,8 @@ namespace vinnysocks5proxy
                     LogDataForConnection(e.Buffer, e.BytesTransferred, e.ConnectSocket, 7);
 
                     sended = connectionTo.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
-                    SizeOfTransferredDataTo += sended;
-    
+                    SpeedOfConnectionTo += sended;
+
                     setAcyncReceiveTo();
                     if (listen.debug > 4)
                     LogForConnection("Transfer data to, size " + sended, connection, 5);
@@ -177,7 +177,7 @@ namespace vinnysocks5proxy
                     LogDataForConnection(e.Buffer, e.BytesTransferred, e.ConnectSocket, 6);
 
                     sended = connection.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
-                    SizeOfTransferredDataFrom += sended;
+                    SpeedOfConnectionFrom += sended;
     
                     setAcyncReceiveFrom();
                     if (listen.debug > 4)
