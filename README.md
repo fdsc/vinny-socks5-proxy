@@ -1,12 +1,11 @@
 # socks5-proxy
+# Русский язык см. ниже
 simple socks5-proxy by C#/Mono
-
-Русский ниже
 
 To translate to English
 https://translate.yandex.ru/?lang=ru-en
 
-Socks5 и http proxy for host in home usage.
+Socks5 and http proxy for host in home usage.
 
 Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework 4.8 in Windows ( https://dotnet.microsoft.com/download )
 
