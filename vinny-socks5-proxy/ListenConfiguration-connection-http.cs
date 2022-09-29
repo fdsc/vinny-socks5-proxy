@@ -81,7 +81,7 @@ namespace vinnysocks5proxy
                     {
                         if (!listen.trusts_domain.Compliance(domain, ref fw))
                         {
-                            LogForConnection($"Domain '{domain}' is denied", connection, 1);
+                            LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
                             SendHttpResponse("403 Forbidden", connection);
                             return false;
                         }
@@ -281,7 +281,7 @@ namespace vinnysocks5proxy
                     // В первой строке должно быть три разделённых пробелами лексемы
                     // Пример
                     // POST http://ocsp2.globalsign.com/gsorganizationvalsha2g2 HTTP/1.1
-                    if (connect.Length != 3 || connect[2].ToLowerInvariant() != "http/1.1")
+                    if (connect.Length != 3 || (connect[2].ToLowerInvariant() != "http/1.1" && connect[2].ToLowerInvariant() != "http/1.0"))
                     {
                         LogForConnection($"incorrect http web-connection\r\n{HttpHello}", connection, 0);
                         SendHttpResponse("400 Bad Request", connection);
@@ -330,7 +330,7 @@ namespace vinnysocks5proxy
                     if (address.Length > 1)
                         port   = Int32.Parse(address[1]);
 
-                    var domain = host;
+                    var domain = address[0];
 
                     connectToSocks = "(" + domain + ")\t" + connectToSocks;
                     LogForConnection("web-request for connection to '" + domain + "'", connection, 3);
@@ -341,7 +341,7 @@ namespace vinnysocks5proxy
                     {
                         if (!listen.trusts_domain.Compliance(domain, ref fw))
                         {
-                            LogForConnection($"Domain '{domain}' is denied", connection, 1);
+                            LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
                             SendHttpResponse("403 Forbidden", connection);
                             return false;
                         }
