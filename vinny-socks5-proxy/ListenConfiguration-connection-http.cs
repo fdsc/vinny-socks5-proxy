@@ -292,9 +292,9 @@ namespace vinnysocks5proxy
                     }
 
                     // host сейчас - это полный url запроса
-                    var host = connect[1].ToLowerInvariant();
+                    var host = connect[1];
                     // Обрабатываем только http
-                    if (/*!host.StartsWith("https://") && */!host.StartsWith("http://"))
+                    if (/*!host.StartsWith("https://") && */!host.ToLowerInvariant().StartsWith("http://"))
                     {
                         LogForConnection($"incorrect http web-connection\r\n{HttpHello}", connection, 0);
                         SendHttpResponse("400 Bad Request", connection);
