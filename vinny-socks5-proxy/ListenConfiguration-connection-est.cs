@@ -341,12 +341,15 @@ namespace vinnysocks5proxy
 
                                     if (listen.trusts_domain != null)
                                     {
-                                        if (!listen.trusts_domain.Compliance(domainName, ref fw))
+                                        listen.SleepInterval = 0;
+                                        if (!listen.trusts_domain.Compliance(domainName, ref fw, ref listen.SleepInterval))
                                         {
                                             LogForConnection($"Domain '{domainName}' is denied", connection, 1);
                                             processResponseForRequest(bb, EC_Denied);
                                             return;
                                         }
+                                        
+                                        LogForConnection($"SleepInterval for domain '{domainName}' is {listen.SleepInterval}", connection, 5);
                                     }
 
                                     GetSocketForTarget(connection, ConnectToPort, fw, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domainName);

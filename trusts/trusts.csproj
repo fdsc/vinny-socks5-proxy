@@ -52,6 +52,7 @@
     <Compile Include="Commands\DomainName.cs" />
     <Compile Include="Commands\TrustsObject-forward.cs" />
     <Compile Include="ForwardingInfo.cs" />
+    <Compile Include="Commands\TrustsObject-sleep.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="example.trusts">

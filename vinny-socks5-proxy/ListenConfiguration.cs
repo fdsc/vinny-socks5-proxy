@@ -13,12 +13,13 @@ namespace vinnysocks5proxy
 {
     public partial class ListenConfiguration: IDisposable, IComparable<ListenConfiguration>
     {
-        public int        max_connections = 64;
-        public Socket     listen_socket   = null;
-        public IPAddress  listen_ip       = default;
-        public int        port            = 0;
-        public IPEndPoint ipe             = default;
-        public TrustsFile trusts_domain   = null;
+        public int        max_connections  = 64;
+        public Socket     listen_socket    = null;
+        public IPAddress  listen_ip        = default;
+        public int        port             = 0;
+        public IPEndPoint ipe              = default;
+        public TrustsFile trusts_domain    = null;
+        public Int64      SleepInterval    = 0;
 
         public ForwardingInfo forwarding = null;
 

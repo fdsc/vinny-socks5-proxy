@@ -12,7 +12,8 @@ namespace trusts
         public readonly FileSystemWatcher trustsFileWatcher = null;             /// <summary>Определяет политику логирования</summary>
         public readonly ErrorReporting    logger            = null;             /// <summary>Если true, то используется файл, иначе информация была загружена из другого источника</summary>
         public readonly bool              isFromFile        = false;            /// <summary>Корень настроек</summary>
-        public volatile TrustsObject      root              = null;
+        public volatile TrustsObject      root              = null;             /// <summary>Спать после каждого коллбэка</summary>
+        public          int               sleepAfterPacket  = 0;
                                                                                         /// <summary>Время последнего доступа к файлу настроек (используется для отслеживания изменений)</summary>
         public          DateTime          LastWriteTimeToTrustsFile = default;
 
@@ -112,7 +113,8 @@ namespace trusts
         /// <returns>True, если имя соответствует политике</returns>
         /// <param name="domainName">Проверяемое доменное имя</param>
         /// <param name="fi">Информайция о перенаправлении на другой прокси-сервер</param>
-        public bool Compliance(string domainName, ref ForwardingInfo fi)
+        /// <param name="SleepInterval">Показывает, сколько именно будет спать поток после вызова callback</param>
+        public bool Compliance(string domainName, ref ForwardingInfo fi, ref Int64 SleepInterval)
         {
             lock (this)
             {
@@ -124,7 +126,7 @@ namespace trusts
                     if (c <= ' ')
                         return false;
 
-                return root.Compliance(domainName, ref fi);
+                return root.Compliance(domainName, ref fi, ref SleepInterval);
             }
         }
 
@@ -334,6 +336,35 @@ namespace trusts
                                         currentCommand = new Directive("forward", nLine[1], isNegative, currentObject, i+1);
 
                                         currentCommand.SubCommand = new ForwardCommand(currentCommand, i+1);
+
+                                        if (currentCommand.syntaxError)
+                                        {
+                                            logger.Log($"TrustsObject.Parse error at line {i+1}. In '{cmd}' command a syntax error found", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                            return null;
+                                        }
+
+                                        // logger.Log($"Parsed command '{currentCommand.Name}' with subcommand '{currentCommand.SubCommand.ToString()}'", "", ErrorReporting.LogTypeCode.Usually, "trustsFile.parse");
+                                        currentObject.commands.Add(currentCommand);
+                                    break;
+
+                                // Копия команд в TrustsObject-Directive.cs и папке Commands
+                                case "sleep":
+                                        if (currentObject == null)
+                                        {
+                                            logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but an current block is missing. Start block with command ':new:BlockName'", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                            return null;
+                                        }
+        
+                                        isNegative = false;
+                                        if (nLine[1].ToLowerInvariant().StartsWith("not:"))
+                                        {
+                                            logger.Log($"TrustsObject.Parse error at line {i+1}. Encountered '{cmd}' command, but the command can not be negative'", trustsFile?.FullName ?? "", ErrorReporting.LogTypeCode.Error, "trustsFile.parse");
+                                            return null;
+                                        }
+
+                                        currentCommand = new Directive("sleep", nLine[1], isNegative, currentObject, i+1);
+
+                                        currentCommand.SubCommand = new SleepCommand(currentCommand, i+1);
 
                                         if (currentCommand.syntaxError)
                                         {

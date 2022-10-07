@@ -79,10 +79,11 @@ namespace vinnysocks5proxy
 
                     sended = connectionTo.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
                     SpeedOfConnectionTo = sended;
+                    DoSleep(sended, ref TimeToSleepTo);
 
                     setAcyncReceiveTo();
                     if (listen.debug > 4)
-                    LogForConnection("Transfer data to, size " + sended, connection, 5);
+                        LogForConnection("Transfer data to, size " + sended, connection, 5);
                 }
                 catch (SocketException ex)
                 {
@@ -99,6 +100,25 @@ namespace vinnysocks5proxy
 
                     Dispose();
                     return;
+                }
+            }
+
+            private void DoSleep(int sended, ref Int64 TimeToSleep)
+            {
+                if (listen.SleepInterval > 0)
+                {
+                    TimeToSleep += listen.SleepInterval * sended;
+
+                    if (TimeToSleep > 55_000)  // Более 55 мс
+                    {
+                        var ss = (int) TimeToSleep / 1_000;
+                        TimeToSleep -= ss * 1_000;
+
+                        Thread.Sleep(ss);
+
+                        if (listen.debug > 4)
+                            LogForConnection($"Sleep {ss} ms for size {sended}", connection, 5);
+                    }
                 }
             }
 
@@ -178,7 +198,8 @@ namespace vinnysocks5proxy
 
                     sended = connection.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
                     SpeedOfConnectionFrom = sended;
-    
+                    DoSleep(sended, ref TimeToSleepFrom);
+
                     setAcyncReceiveFrom();
                     if (listen.debug > 4)
                     LogForConnection("Transfer data from, size " + sended, connection, 5);

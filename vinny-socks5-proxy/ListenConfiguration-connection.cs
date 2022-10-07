@@ -21,6 +21,8 @@ namespace vinnysocks5proxy
             public long   SizeOfTransferredDataTo   = 0;
             public long   SizeOfTransferredDataFrom = 0;
             public readonly ListenConfiguration listen = null;
+            
+            public Int64  TimeToSleepTo, TimeToSleepFrom  = 0;
 
             public class ConnectionSpeedRecord
             {

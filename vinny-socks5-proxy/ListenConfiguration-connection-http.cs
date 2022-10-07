@@ -79,12 +79,15 @@ namespace vinnysocks5proxy
                     // Проверяем, разрешён ли данный домен
                     if (listen.trusts_domain != null)
                     {
-                        if (!listen.trusts_domain.Compliance(domain, ref fw))
+                        listen.SleepInterval = 0;
+                        if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.SleepInterval))
                         {
                             LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
                             SendHttpResponse("403 Forbidden", connection);
                             return false;
                         }
+                        
+                        LogForConnection($"SleepInterval for domain '{domain}' is {listen.SleepInterval}", connection, 5);
                     }
 
                     // Требуется аутентификация
@@ -339,12 +342,15 @@ namespace vinnysocks5proxy
                     // Проверяем, разрешён ли данный домен
                     if (listen.trusts_domain != null)
                     {
-                        if (!listen.trusts_domain.Compliance(domain, ref fw))
+                        listen.SleepInterval = 0;
+                        if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.SleepInterval))
                         {
                             LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
                             SendHttpResponse("403 Forbidden", connection);
                             return false;
                         }
+                        
+                        LogForConnection($"SleepInterval for domain '{domain}' is {listen.SleepInterval}", connection, 5);
                     }
 
                     // Пробуем соединиться с целевым сервером

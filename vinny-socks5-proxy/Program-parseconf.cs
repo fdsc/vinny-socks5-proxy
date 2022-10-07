@@ -406,6 +406,7 @@ namespace vinnysocks5proxy
                         }
 
                         break;
+
                     default:
                         Console.Error.WriteLine("error in conf file " + confFilePath);
                         Console.Error.WriteLine("unknown parameter name: " + pName);

@@ -209,7 +209,8 @@ namespace trusts
         /// <returns>True, если имя соответствует политике</returns>
         /// <param name="domainName">Проверяемое доменное имя</param>
         /// <param name="fi">Информайция о перенаправлении на другой прокси-сервер</param>
-        public bool Compliance(string domainName, ref ForwardingInfo fi)
+        /// <param name="SleepInterval">Показывает, сколько именно будет спать поток после вызова callback</param>
+        public bool Compliance(string domainName, ref ForwardingInfo fi, ref Int64 SleepInterval)
         {
             var Name        = new DomainName(domainName);
             var commandType = Command.CommandType.reject;
@@ -219,12 +220,12 @@ namespace trusts
             if (Name.syntaxError)
                 return false;
 
-            Complains(Name, ref commandType, ref priority, root, ref fi);
+            Complains(Name, ref commandType, ref priority, root, ref fi, ref SleepInterval);
 
             return commandType == Command.CommandType.accept;
         }
 
-        private TrustsProgramContinuation Complains(DomainName domainName, ref Command.CommandType commandType, ref Priority priority, TrustsObject root, ref ForwardingInfo fi)
+        private TrustsProgramContinuation Complains(DomainName domainName, ref Command.CommandType commandType, ref Priority priority, TrustsObject root, ref ForwardingInfo fi, ref Int64 SleepInterval)
         {
             foreach (var cmd in root.commands)
             {
@@ -272,7 +273,7 @@ namespace trusts
                         foreach (var blockName in trn.parametres)
                         {
                             // Делаем переход на другой блок
-                            var result = Complains(domainName, ref commandType, ref priority, root.rootCollection[blockName], ref fi);
+                            var result = Complains(domainName, ref commandType, ref priority, root.rootCollection[blockName], ref fi, ref SleepInterval);
 
                             // Если внутри обрабатываемого блока сработала команда stop, передаём её выше
                             if (result == TrustsProgramContinuation.stop)
@@ -304,7 +305,7 @@ namespace trusts
                     else
                     {
                         // Делаем переход на другой блок
-                        var result = Complains(domainName, ref commandType, ref priority, root.rootCollection[trn.Parameter], ref fi);
+                        var result = Complains(domainName, ref commandType, ref priority, root.rootCollection[trn.Parameter], ref fi, ref SleepInterval);
 
                         // Если внутри обрабатываемого блока сработала команда stop, передаём её выше
                         if (result == TrustsProgramContinuation.stop)
@@ -351,6 +352,13 @@ namespace trusts
                     // Это команда перенаправления на другой прокси. Не имеет приоритетов, выполняется немедленно
                     var command = cmd.SubCommand as ForwardCommand;
                     fi = command.fi;
+                }
+                else
+                if (cmd.SubCommand is SleepCommand)
+                {
+                    // Нужно ли спать после вызова callback
+                    var command   = cmd.SubCommand as SleepCommand;
+                    SleepInterval = command.SleepInterval;
                 }
                 else
                 {
