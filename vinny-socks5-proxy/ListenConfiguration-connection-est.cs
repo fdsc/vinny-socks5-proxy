@@ -339,9 +339,9 @@ namespace vinnysocks5proxy
 
                                     LogForConnection("Request for connection to '" + domainName + "'", connection, 3);
 
+                                    listen.SleepInterval = 0;
                                     if (listen.trusts_domain != null)
                                     {
-                                        listen.SleepInterval = 0;
                                         if (!listen.trusts_domain.Compliance(domainName, ref fw, ref listen.SleepInterval))
                                         {
                                             LogForConnection($"Domain '{domainName}' is denied", connection, 1);

@@ -77,9 +77,9 @@ namespace vinnysocks5proxy
 
                     var fw = listen.forwarding;
                     // Проверяем, разрешён ли данный домен
+                    listen.SleepInterval = 0;
                     if (listen.trusts_domain != null)
                     {
-                        listen.SleepInterval = 0;
                         if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.SleepInterval))
                         {
                             LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
@@ -340,9 +340,9 @@ namespace vinnysocks5proxy
 
                     var fw = listen.forwarding;
                     // Проверяем, разрешён ли данный домен
+                    listen.SleepInterval = 0;
                     if (listen.trusts_domain != null)
                     {
-                        listen.SleepInterval = 0;
                         if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.SleepInterval))
                         {
                             LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
