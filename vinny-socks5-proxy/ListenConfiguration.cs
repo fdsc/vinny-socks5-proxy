@@ -79,12 +79,14 @@ namespace vinnysocks5proxy
             }
         }
 
-        public void Listen()
+        public void Listen(bool doLog = true)
         {
             try
             {
+                if (doLog)
                 Log($"Listening starting...", 4, ErrorReporting.LogTypeCode.Usually);
                 listen_socket?.Dispose();
+                listen_socket = null;
 
                 listen_socket = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                 listen_socket.Bind(ipe);
@@ -94,6 +96,7 @@ namespace vinnysocks5proxy
             }
             catch (Exception e)
             {
+                if (doLog)
                 Log("Error occured in a start of listening\r\n" + e.Message, 0);
             }
         }
@@ -102,6 +105,8 @@ namespace vinnysocks5proxy
         {
             if (listen_socket == null || !listen_socket.IsBound)
             {
+                Listen(false);
+
                 Incorrect = true;
                 return null;
             }

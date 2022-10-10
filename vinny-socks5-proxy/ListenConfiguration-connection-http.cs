@@ -149,7 +149,7 @@ namespace vinnysocks5proxy
                     
                     // Прошли аутентификацию либо она не требуется.
                     // Пробуем соединиться с целевым сервером
-                    var addresses = Dns.GetHostAddresses(domain);
+                    // var addresses = Dns.GetHostAddresses(domain);
 
                     bool connected = false;
                     int networkUnreachable = 0, connectionRefused = 0, anotherError = 0;
@@ -354,7 +354,7 @@ namespace vinnysocks5proxy
                     }
 
                     // Пробуем соединиться с целевым сервером
-                    var addresses = Dns.GetHostAddresses(domain);
+                    // var addresses = Dns.GetHostAddresses(domain);
 
                     bool connected = false;
                     int networkUnreachable = 0, connectionRefused = 0, anotherError = 0;

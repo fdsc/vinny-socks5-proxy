@@ -255,7 +255,7 @@ namespace vinnysocks5proxy
 
                             if (  !isIPv4(current.forwarding.forwarding)  )
                             {
-                                Console.WriteLine("forwarding is supported only IPv4 addresses");
+                                Console.WriteLine("forwarding is supported for IPv4 addresses only");
                                 goto forwarding_error;
                             }
                         }
