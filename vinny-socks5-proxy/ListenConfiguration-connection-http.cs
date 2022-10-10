@@ -77,17 +77,17 @@ namespace vinnysocks5proxy
 
                     var fw = listen.forwarding;
                     // Проверяем, разрешён ли данный домен
-                    listen.SleepInterval = 0;
+                    listen.MaxSpeedTo = 0;
                     if (listen.trusts_domain != null)
                     {
-                        if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.SleepInterval))
+                        if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.MaxSpeedTo))
                         {
                             LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
                             SendHttpResponse("403 Forbidden", connection);
                             return false;
                         }
                         
-                        LogForConnection($"SleepInterval for domain '{domain}' is {listen.SleepInterval}", connection, 5);
+                        LogForConnection($"SleepInterval for domain '{domain}' is {listen.MaxSpeedTo}", connection, 5);
                     }
 
                     // Требуется аутентификация
@@ -340,17 +340,17 @@ namespace vinnysocks5proxy
 
                     var fw = listen.forwarding;
                     // Проверяем, разрешён ли данный домен
-                    listen.SleepInterval = 0;
+                    listen.MaxSpeedTo = 0;
                     if (listen.trusts_domain != null)
                     {
-                        if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.SleepInterval))
+                        if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.MaxSpeedTo))
                         {
                             LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
                             SendHttpResponse("403 Forbidden", connection);
                             return false;
                         }
                         
-                        LogForConnection($"SleepInterval for domain '{domain}' is {listen.SleepInterval}", connection, 5);
+                        LogForConnection($"SleepInterval for domain '{domain}' is {listen.MaxSpeedTo}", connection, 5);
                     }
 
                     // Пробуем соединиться с целевым сервером

@@ -339,17 +339,17 @@ namespace vinnysocks5proxy
 
                                     LogForConnection("Request for connection to '" + domainName + "'", connection, 3);
 
-                                    listen.SleepInterval = 0;
+                                    listen.MaxSpeedTo = 0;
                                     if (listen.trusts_domain != null)
                                     {
-                                        if (!listen.trusts_domain.Compliance(domainName, ref fw, ref listen.SleepInterval))
+                                        if (!listen.trusts_domain.Compliance(domainName, ref fw, ref listen.MaxSpeedTo))
                                         {
                                             LogForConnection($"Domain '{domainName}' is denied", connection, 1);
                                             processResponseForRequest(bb, EC_Denied);
                                             return;
                                         }
                                         
-                                        LogForConnection($"SleepInterval for domain '{domainName}' is {listen.SleepInterval}", connection, 5);
+                                        LogForConnection($"SleepInterval for domain '{domainName}' is {listen.MaxSpeedTo}", connection, 5);
                                     }
 
                                     GetSocketForTarget(connection, ConnectToPort, fw, ref connected, ref networkUnreachable, ref connectionRefused, ref anotherError, domainName);

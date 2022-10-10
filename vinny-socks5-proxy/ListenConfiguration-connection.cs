@@ -110,7 +110,8 @@ namespace vinnysocks5proxy
             static readonly long secondOfTime     = 10000*1000;   // 10000*1000 - 1 секунда
                    readonly long obsolescenceTime = 60*secondOfTime;
 
-            protected long getSummOfListSpeedRecords(List<ConnectionSpeedRecord> list, DateTime now)
+            // maxDuration - in ms
+            protected long getSummOfListSpeedRecords(List<ConnectionSpeedRecord> list, DateTime now, long maxDuration = long.MaxValue)
             {
                 lock (list)
                 {
@@ -127,8 +128,15 @@ namespace vinnysocks5proxy
                     long summOfDataSizes = 0;                    
                     foreach (var item in list)
                     {
+                        var dur = (now - item.time).TotalMilliseconds; // ms
+                        if (dur > maxDuration)
+                            continue;
+
                         summOfDataSizes += item.size;
                     }
+                    
+                    if (maxDuration < long.MaxValue)
+                        return summOfDataSizes;
 
                     return (summOfDataSizes * secondOfTime / duration);
                 }

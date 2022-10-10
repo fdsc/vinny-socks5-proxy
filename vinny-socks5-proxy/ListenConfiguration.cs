@@ -19,7 +19,7 @@ namespace vinnysocks5proxy
         public int        port             = 0;
         public IPEndPoint ipe              = default;
         public TrustsFile trusts_domain    = null;
-        public Int64      SleepInterval    = 0;
+        public Int64      MaxSpeedTo    = 0;
 
         public ForwardingInfo forwarding = null;
 

@@ -79,7 +79,7 @@ namespace vinnysocks5proxy
 
                     sended = connectionTo.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
                     SpeedOfConnectionTo = sended;
-                    DoSleep(sended, ref TimeToSleepTo);
+                    DoSleep(sended, ref TimeToSleepTo, BytesTo, List_SpeedOfConnectionTo);
 
                     setAcyncReceiveTo();
                     if (listen.debug > 4)
@@ -103,21 +103,37 @@ namespace vinnysocks5proxy
                 }
             }
 
-            private void DoSleep(int sended, ref Int64 TimeToSleep)
+            const int maxSleep = 8_000;
+            private void DoSleep(int sended, ref Int64 TimeToSleep, byte[] buffer, List<ConnectionSpeedRecord> list)
             {
-                if (listen.SleepInterval > 0)
+                if (listen.MaxSpeedTo > 0)
                 {
-                    TimeToSleep += listen.SleepInterval * sended;
+                    var speed = getSummOfListSpeedRecords(list, DateTime.Now, maxSleep) / (maxSleep / 1000);
 
-                    if (TimeToSleep > 55_000)  // Более 55 мс
+                    if (speed > listen.MaxSpeedTo)
                     {
-                        var ss = (int) TimeToSleep / 1_000;
-                        TimeToSleep -= ss * 1_000;
+                        if (TimeToSleep <= 16)
+                        {
+                            TimeToSleep = buffer.Length / listen.MaxSpeedTo * 1000;
+                        }
+                        else
+                            TimeToSleep += TimeToSleep / 16;
+                    }
+                    else
+                    if ((listen.MaxSpeedTo - speed) / listen.MaxSpeedTo < 0.95 )
+                        TimeToSleep -= TimeToSleep / 256;
 
-                        Thread.Sleep(ss);
+                    if (TimeToSleep > maxSleep)
+                        TimeToSleep = maxSleep;
+
+                    LogForConnection($"SPEED {speed} + {sended} / tts {TimeToSleep}", connection, 5);
+
+                    if (TimeToSleep > 55)  // Более 55 мс
+                    {
+                        Thread.Sleep((int) TimeToSleep);
 
                         if (listen.debug > 4)
-                            LogForConnection($"Sleep {ss} ms for size {sended}", connection, 5);
+                            LogForConnection($"Sleep {TimeToSleep} ms for size {sended}", connection, 5);
                     }
                 }
             }
@@ -198,7 +214,7 @@ namespace vinnysocks5proxy
 
                     sended = connection.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
                     SpeedOfConnectionFrom = sended;
-                    DoSleep(sended, ref TimeToSleepFrom);
+                    DoSleep(sended, ref TimeToSleepFrom, BytesFrom, List_SpeedOfConnectionFrom);
 
                     setAcyncReceiveFrom();
                     if (listen.debug > 4)

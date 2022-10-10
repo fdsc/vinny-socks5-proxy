@@ -1,0 +1,7 @@
+﻿:new:root
+
+:sleep:1400
+
+:command:accept:0
+
+:end:root
