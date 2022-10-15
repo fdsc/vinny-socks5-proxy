@@ -225,6 +225,8 @@ namespace vinnysocks5proxy
             public void Dispose(bool doNotDelete)
             {
                 doTerminate = true;
+                Interlocked.Decrement(ref connection_count);
+
                 lock (this)
                 {
                     if (isDisposed)

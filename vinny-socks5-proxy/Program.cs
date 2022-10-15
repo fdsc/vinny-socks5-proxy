@@ -221,6 +221,8 @@ namespace vinnysocks5proxy
                     var t = Accept(tasks);
                     t.Wait();
                 }
+                catch (ListenConfiguration.Connection.MaxConnectinLimitExceedsException)
+                {}
                 // Это случается, когда программа завершается
                 catch (ThreadAbortException e)
                 {
@@ -310,6 +312,9 @@ namespace vinnysocks5proxy
     
                     listen.newConnection(await connected);
                 }
+                // Превышено максимальное количество соединений
+                catch (ListenConfiguration.Connection.MaxConnectinLimitExceedsException)
+                {}
                 // Это случается, когда программа завершается
                 catch (ThreadAbortException e)
                 {

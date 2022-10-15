@@ -48,9 +48,27 @@ namespace vinnysocks5proxy
             /// <summary>Используется для кодирования сообщений из октетов в строки</summary>
             public readonly ASCIIEncoding asciiEncoding = new ASCIIEncoding();
 
+
+            public static volatile int connection_count = 0;
+            public class MaxConnectinLimitExceedsException: Exception
+            {
+                public MaxConnectinLimitExceedsException(): base("The max connection limit exceeds")
+                {
+                }
+            }
+
             // Установка нового соединения клиента с прокси
             public Connection(Socket connection, ListenConfiguration listen)
             {
+                var cnt = Interlocked.Increment(ref connection_count);
+                if (cnt > listen.max_connections)
+                {
+                    LogForConnection($"The max connection limit exceeds; Count of connections in the listener {listen.connections.Count} ({connection_count})", connection, 2);
+                    Dispose();
+
+                    throw new MaxConnectinLimitExceedsException();
+                }
+
                 this.connection = connection;
                 this.listen     = listen;
 
