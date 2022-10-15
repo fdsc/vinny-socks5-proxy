@@ -16,6 +16,8 @@ namespace vinnysocks5proxy
 {
     public partial class ListenConfiguration: IDisposable, IComparable<ListenConfiguration>
     {
+        public volatile int connection_count = 0;
+    
         public partial class Connection: IDisposable
         {
             // https://datatracker.ietf.org/doc/html/rfc1928#section-3
@@ -48,8 +50,6 @@ namespace vinnysocks5proxy
             /// <summary>Используется для кодирования сообщений из октетов в строки</summary>
             public readonly ASCIIEncoding asciiEncoding = new ASCIIEncoding();
 
-
-            public static volatile int connection_count = 0;
             public class MaxConnectinLimitExceedsException: Exception
             {
                 public MaxConnectinLimitExceedsException(): base("The max connection limit exceeds")
@@ -60,22 +60,23 @@ namespace vinnysocks5proxy
             // Установка нового соединения клиента с прокси
             public Connection(Socket connection, ListenConfiguration listen)
             {
-                var cnt = Interlocked.Increment(ref connection_count);
+                this.connection = connection;
+                this.listen     = listen;
+
+                connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
+
+                var cnt = Interlocked.Increment(ref listen.connection_count);
                 if (cnt > listen.max_connections)
                 {
-                    LogForConnection($"The max connection limit exceeds; Count of connections in the listener {listen.connections.Count} ({connection_count})", connection, 2);
+                    LogForConnection($"The max connection limit exceeds; Count of connections in the listener {listen.connections.Count} ({listen.connection_count})", connection, 1);
                     Dispose();
 
                     throw new MaxConnectinLimitExceedsException();
                 }
 
-                this.connection = connection;
-                this.listen     = listen;
-
                 connection.SendBufferSize    = BufferSizeForConnection;
                 connection.ReceiveBufferSize = BufferSizeForConnection;
 
-                connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
                 start.Start();
 
                 ThreadPool.QueueUserWorkItem
