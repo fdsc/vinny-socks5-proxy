@@ -96,6 +96,16 @@ namespace vinnysocks5proxy
             }
             catch (Exception e)
             {
+                try
+                {
+                    if (listen_socket != null)
+                       listen_socket.Dispose();
+                }
+                catch (Exception)
+                { }
+
+                listen_socket = null;
+
                 if (doLog)
                 Log("Error occured in a start of listening\r\n" + e.Message, 0);
             }

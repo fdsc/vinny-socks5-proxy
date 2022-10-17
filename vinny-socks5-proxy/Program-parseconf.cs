@@ -26,15 +26,15 @@ namespace vinnysocks5proxy
                 Console.Error.WriteLine("conf file not exists " + confFilePath);
                 return false;
             }
-            
+
             ListenConfiguration current = null;
-            string              curUser = null;
+            string curUser = null;
 
             var lines_raw = File.ReadLines(confFilePath, new System.Text.UTF8Encoding());
             foreach (var line_raw in lines_raw)
             {
                 var line = line_raw.Trim();
-                
+
                 if (line.StartsWith("#", StringComparison.InvariantCultureIgnoreCase) || line.Length <= 0)
                     continue;
 
@@ -50,8 +50,8 @@ namespace vinnysocks5proxy
 
                 var pName = @params[0].Trim().ToLowerInvariant();
                 var pVal  = @params[1].Trim();
-                
-                
+
+
                 switch (pName)
                 {
                     case "error":
@@ -84,7 +84,7 @@ namespace vinnysocks5proxy
                         }
 
                         break;
-                        
+
                     case "domain_trusts":
                         try
                         {
@@ -141,13 +141,13 @@ namespace vinnysocks5proxy
                             return false;
                         }
 
-                         current.users.Add(curUser, pVal.Trim());
-                         curUser = null;
-                            
+                        current.users.Add(curUser, pVal.Trim());
+                        curUser = null;
+
                         break;
 
                     case "watchdoginterval":
-                    
+
                         if (!int.TryParse(pVal.Trim(), out int interval))
                         {
                             Console.Error.WriteLine("error in conf file " + confFilePath);
@@ -160,7 +160,7 @@ namespace vinnysocks5proxy
                         break;
 
                     case "watchdogthreshold":
-                    
+
                         if (!int.TryParse(pVal.Trim(), out int threshold))
                         {
                             Console.Error.WriteLine("error in conf file " + confFilePath);
@@ -175,7 +175,7 @@ namespace vinnysocks5proxy
                     case "ipv4":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
-                            
+
                         if (pVal == "reject")
                             current.namesGranted_ipv4 = false;
                         else
@@ -192,7 +192,7 @@ namespace vinnysocks5proxy
                     case "ipv6":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
-                            
+
                         if (pVal == "reject")
                             current.namesGranted_ipv6 = false;
                         else
@@ -270,7 +270,7 @@ namespace vinnysocks5proxy
                     case "Timeoutsendtotarget":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
-                            
+
                         if (Int32.TryParse(pVal, out int TimeoutSendToTarget))
                         {
                             current.TimeoutSendToTarget = TimeoutSendToTarget;
@@ -287,7 +287,7 @@ namespace vinnysocks5proxy
                     case "timeoutsendtoclient":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
-                            
+
                         if (Int32.TryParse(pVal, out int TimeoutSendToClient))
                         {
                             current.TimeoutSendToClient = TimeoutSendToClient;
@@ -304,7 +304,7 @@ namespace vinnysocks5proxy
                     case "timeoutreceivefromclient":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
-                            
+
                         if (Int32.TryParse(pVal, out int TimeoutReceiveFromClient))
                         {
                             current.TimeoutReceiveFromClient = TimeoutReceiveFromClient;
@@ -321,7 +321,7 @@ namespace vinnysocks5proxy
                     case "timeoutreceivefromtarget":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
-                            
+
                         if (Int32.TryParse(pVal, out int TimeoutReceiveFromTarget))
                         {
                             current.TimeoutReceiveFromTarget = TimeoutReceiveFromTarget;
@@ -338,7 +338,7 @@ namespace vinnysocks5proxy
                     case "debug":
                         if (!CheckCurrentAndPrintError(current, confFilePath))
                             return false;
-                            
+
                         if (Int32.TryParse(pVal, out int debugLevel))
                         {
                             current.debug = debugLevel;
@@ -415,7 +415,7 @@ namespace vinnysocks5proxy
             }
 
             current = null;
-            
+
             foreach (var ls in listens)
             {
                 if (!ls.checkCorrect())
@@ -430,14 +430,20 @@ namespace vinnysocks5proxy
                 }
             }
 
-            foreach (var ls in listens)
-            {
-                ls.Listen();
-            }
+            SetListeners();
 
             return true;
         }
-        
+
+        private static void SetListeners()
+        {
+            foreach (var ls in listens)
+            {
+                if (ls.listen_socket == null)
+                    ls.Listen();
+            }
+        }
+
         public static bool CheckCurrentAndPrintError(ListenConfiguration current, string confFilePath)
         {
             if (current != null)

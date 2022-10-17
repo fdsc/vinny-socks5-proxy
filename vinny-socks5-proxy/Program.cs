@@ -220,6 +220,8 @@ namespace vinnysocks5proxy
                 {
                     var t = Accept(tasks);
                     t.Wait();
+                    
+                    SetListeners();
                 }
                 catch (ListenConfiguration.Connection.MaxConnectinLimitExceedsException)
                 {}
