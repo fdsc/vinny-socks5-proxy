@@ -7,7 +7,7 @@ https://translate.yandex.ru/?lang=ru-en
 
 Socks5 and http proxy for host in home usage.
 
-Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework 4.8 in Windows ( https://dotnet.microsoft.com/download )
+Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework 4.8 in Windows ( https://dotnet.microsoft.com/download ) or .NET 7.0 ( https://dotnet.microsoft.com/download )
 
 Completed functionality:
 * Can listen on multiple ports
@@ -32,7 +32,7 @@ Example of configuration
 
 Socks5 и http прокси для домашнего использования на своей машине.
 
-Требует Mono на Linux ( https://www.mono-project.com/ ) и .NET Framework 4.8 на Windows ( https://dotnet.microsoft.com/download )
+Требует Mono на Linux ( https://www.mono-project.com/ ) и .NET Framework 4.8 на Windows ( https://dotnet.microsoft.com/download ) и .NET 7.0 ( https://dotnet.microsoft.com/download )
 
 Законченная функциональность
 * Может прослушивать несколько портов
@@ -42,7 +42,7 @@ Socks5 и http прокси для домашнего использования
 
 Недостатки:
 * этот прокси сделан для личного пользования. Я не сильно его отлаживал и "шлифовал"
-* не возможности перезагрузить конфигурацию во время выполнения (доступно только для trusts-файла)
+* нет возможности перезагрузить конфигурацию во время выполнения (доступно только для trusts-файла)
 * сложный язык настройки конфигурации файла доверия
 * поддерживается только команда TCP CONNECT. Этого достаточно для большинства домашних приложений (браузеров, дисков и т.п.), но это не все возможности socks5
 
