@@ -585,7 +585,7 @@ namespace vinnysocks5proxy
                 listen.Log($"{connectToSocks}" + "\r\n" + Message, debugLevel);
             }
 
-            public void LogDataForConnection(byte[] Message, int count, Socket connection, int debugLevel)
+            public void LogDataForConnection(byte[] Message, int count, Socket connection, int debugLevel, string direction = "from")
             {
                 var str = "";
                 if (count <= 4096)
@@ -593,11 +593,10 @@ namespace vinnysocks5proxy
                 else
                     str = Encoding.ASCII.GetString(Message, 0, 4096);
 
-                listen.Log($"{connectToSocks}" + "\r\n[[[start data]]]\r\n" + str + "\r\n[[[end data]]]\r\n", debugLevel);
-                /*var endPoint = connection?.RemoteEndPoint?.ToString();
+                var endPoint = connection?.RemoteEndPoint?.ToString();
                 endPoint ??= "null";
-                listen.Log($"{connectToSocks} [to {endPoint}]" + "\r\n[[[start data]]]\r\n" + str + "\r\n[[[end data]]]\r\n", debugLevel);
-                */
+
+                listen.Log($"{connectToSocks} [{direction} {endPoint}]" + "\r\n[[[start data]]]\r\n" + str + "\r\n[[[end data]]]\r\n", debugLevel);
             }
         }
 

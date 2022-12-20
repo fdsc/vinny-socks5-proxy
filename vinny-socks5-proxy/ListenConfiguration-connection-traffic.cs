@@ -27,6 +27,7 @@ namespace vinnysocks5proxy
                 {
                     var sa = new SocketAsyncEventArgs();
                     sa.Completed += ReceiveAsyncTo;
+                    sa.UserToken  = connection;
                     sa.SetBuffer(BytesTo, 0, BytesTo.Length);
 
                     if (!connection.ReceiveAsync(sa))
@@ -75,7 +76,7 @@ namespace vinnysocks5proxy
 
                     int sended = 0;
 
-                    LogDataForConnection(e.Buffer, e.BytesTransferred, e.ConnectSocket, 7);
+                    LogDataForConnection(e.Buffer, e.BytesTransferred, e.ConnectSocket ?? (Socket) e.UserToken, 7);
 
                     sended = connectionTo.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
                     SpeedOfConnectionTo = sended;
@@ -150,6 +151,7 @@ namespace vinnysocks5proxy
                 {
                     var sa = new SocketAsyncEventArgs();
                     sa.Completed += ReceiveAsyncFrom;
+                    sa.UserToken  = connectionTo;
                     sa.SetBuffer(BytesFrom, 0, BytesFrom.Length);
 
                     if (!connectionTo.ReceiveAsync(sa))
@@ -189,8 +191,11 @@ namespace vinnysocks5proxy
 
                 try
                 {
+                    // В .NET 7.0 e.ConnectSocket бывает равным null
+                    var ConnectSocket = e.ConnectSocket ?? (Socket) e.UserToken;
                     // Если соединение было завершено, ничего не делаем
-                    if (connectionTo == null || e.ConnectSocket == oldConnectionTo)
+
+                    if (connectionTo == null || ConnectSocket == oldConnectionTo)
                         return;
 
                     if (e.SocketError != SocketError.Success)
@@ -210,13 +215,14 @@ namespace vinnysocks5proxy
 
                     int sended = 0;
     
-                    LogDataForConnection(e.Buffer, e.BytesTransferred, e.ConnectSocket, 6);
+                    LogDataForConnection(e.Buffer, e.BytesTransferred, ConnectSocket, 6);
 
                     sended = connection.Send(e.Buffer, e.BytesTransferred, SocketFlags.None);
                     SpeedOfConnectionFrom = sended;
                     DoSleep(sended, ref TimeToSleepFrom, BytesFrom, List_SpeedOfConnectionFrom);
-
+                    
                     setAcyncReceiveFrom();
+
                     if (listen.debug > 4)
                     LogForConnection("Transfer data from, size " + sended, connection, 5);
                 }
@@ -260,8 +266,8 @@ namespace vinnysocks5proxy
                 if (listen.TimeoutReceiveFromTarget > 0)
                 connectionTo.ReceiveTimeout = listen.TimeoutReceiveFromTarget;
 
-                setAcyncReceiveTo();
                 setAcyncReceiveFrom();
+                setAcyncReceiveTo();
             }
         }
     }
