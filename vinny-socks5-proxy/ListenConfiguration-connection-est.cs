@@ -594,6 +594,10 @@ namespace vinnysocks5proxy
                     str = Encoding.ASCII.GetString(Message, 0, 4096);
 
                 listen.Log($"{connectToSocks}" + "\r\n[[[start data]]]\r\n" + str + "\r\n[[[end data]]]\r\n", debugLevel);
+                /*var endPoint = connection?.RemoteEndPoint?.ToString();
+                endPoint ??= "null";
+                listen.Log($"{connectToSocks} [to {endPoint}]" + "\r\n[[[start data]]]\r\n" + str + "\r\n[[[end data]]]\r\n", debugLevel);
+                */
             }
         }
 

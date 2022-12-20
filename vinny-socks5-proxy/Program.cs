@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using static vinnysocks5proxy.Helper;
 using static trusts.Helper;
 
+// For build for .NET 7.0 see "net7.0" folder (bash build.sh)
+
 // Стандарт по socks5
 // https://datatracker.ietf.org/doc/html/rfc1928
 
