@@ -7,7 +7,7 @@ https://translate.yandex.ru/?lang=ru-en
 
 Socks5 and http proxy for host in home usage.
 
-Need Mono in Linux ( https://www.mono-project.com/ ) and .NET Framework 4.8 in Windows ( https://dotnet.microsoft.com/download ) or .NET 7.0 ( https://dotnet.microsoft.com/download )
+Need [Mono](https://www.mono-project.com/) in Linux and [.NET Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework) in Windows or [.NET 7.0](https://dotnet.microsoft.com/download)
 
 Completed functionality:
 * Can listen on multiple ports
@@ -32,7 +32,7 @@ Example of configuration
 
 Socks5 и http прокси для домашнего использования на своей машине.
 
-Требует Mono на Linux ( https://www.mono-project.com/ ) и .NET Framework 4.8 на Windows ( https://dotnet.microsoft.com/download ) и .NET 7.0 ( https://dotnet.microsoft.com/download )
+Требует [Mono](https://www.mono-project.com/) на Linux и [.NET Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework) на Windows или [.NET 7.0](https://dotnet.microsoft.com/download) для любых поддерживаемых .NET систем
 
 Законченная функциональность
 * Может прослушивать несколько портов
