@@ -1,6 +1,6 @@
 # socks5-proxy
 # Русский язык см. ниже
-simple socks5-proxy by C#/Mono
+simple socks5-proxy by C#
 
 To translate to English
 https://translate.yandex.ru/?lang=ru-en
