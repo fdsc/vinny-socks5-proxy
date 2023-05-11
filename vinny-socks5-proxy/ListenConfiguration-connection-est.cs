@@ -207,7 +207,7 @@ namespace vinnysocks5proxy
                                     return;
                                 }
 
-                                if (!SecureCompare(password, listen.users[user]))
+                                if (!listen.users[user].isWellPassword(password))
                                 {
                                     LogErrorForConnection($"Incorrect user or password: " + user, connection, null, 0);
                                     connection.Send(new byte[] { 0x01, 0x01 });

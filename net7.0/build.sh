@@ -53,15 +53,15 @@ cp -f ./build/vinny-socks5-proxy/bin/Release/net7.0/linux-x64/publish/vinny-sock
 #cp -f ./build/vinny-socks5-proxy/bin/Release/net7.0/publish/*.conf* ./build/arc/vinny-socks5-proxy &&
 #cp -f ./build/vinny-socks5-proxy/bin/Release/net7.0/publish/*.json ./build/arc/vinny-socks5-proxy &&
 
-7z a -y -t7z -stl -m0=lzma -mx=9 -ms=on -bb0 -bd -ssc -ssw ../build/vinny-socks5-proxy-net70.7z ./build/arc/vinny-socks5-proxy &&
+7z a -y -t7z -stl -m0=lzma -mx=9 -ms=on -bb0 -bd -ssc -ssw ../build/vinny-socks5-proxy-net70.7z ./build/arc/vinny-socks5-proxy
 
 
 
-cp -f ../vinny-socks5-proxy/bin/Release/*.dll ../build/arc/vinny-socks5-proxy &&
-cp -f ../vinny-socks5-proxy/bin/Release/*.exe ../build/arc/vinny-socks5-proxy &&
-cp -f ../vinny-socks5-proxy/bin/Release/*.trusts ../build/arc/vinny-socks5-proxy &&
-cp -f ../vinny-socks5-proxy/bin/Release/*.txt ../build/arc/vinny-socks5-proxy &&
-cp -f ../vinny-socks5-proxy/bin/Release/*.conf* ../build/arc/vinny-socks5-proxy &&
+#cp -f ../vinny-socks5-proxy/bin/Release/*.dll ../build/arc/vinny-socks5-proxy &&
+#cp -f ../vinny-socks5-proxy/bin/Release/*.exe ../build/arc/vinny-socks5-proxy &&
+#cp -f ../vinny-socks5-proxy/bin/Release/*.trusts ../build/arc/vinny-socks5-proxy &&
+#cp -f ../vinny-socks5-proxy/bin/Release/*.txt ../build/arc/vinny-socks5-proxy &&
+#cp -f ../vinny-socks5-proxy/bin/Release/*.conf* ../build/arc/vinny-socks5-proxy &&
 
-7z a -y -t7z -stl -m0=lzma -mx=9 -ms=on -bb0 -bd -ssc -ssw ../build/vinny-socks5-proxy-framework48.7z ../build/arc/vinny-socks5-proxy
+#7z a -y -t7z -stl -m0=lzma -mx=9 -ms=on -bb0 -bd -ssc -ssw ../build/vinny-socks5-proxy-framework48.7z ../build/arc/vinny-socks5-proxy
 

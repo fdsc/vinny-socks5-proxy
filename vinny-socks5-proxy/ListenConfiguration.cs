@@ -9,10 +9,45 @@ using static vinnysocks5proxy.Helper;
 using static trusts.Helper;
 using trusts;
 
+using System.Security.Cryptography;
+using System.Text;
+
 namespace vinnysocks5proxy
 {
     public partial class ListenConfiguration: IDisposable, IComparable<ListenConfiguration>
     {
+        public class UserPassword
+        {
+            public readonly string password;
+            public readonly bool   isPasswordHash;
+
+            public UserPassword(string password, bool isPasswordHash = false)
+            {
+                this.password       = password;
+                this.isPasswordHash = isPasswordHash;
+
+                if (this.isPasswordHash)
+                    this.password = this.password.ToLowerInvariant();
+            }
+
+            public bool isWellPassword(string passwordFromInput)
+            {
+                if (!isPasswordHash)
+                {
+                    return SecureCompare(password, passwordFromInput);
+                }
+
+                var toHash = Encoding.ASCII.GetBytes(passwordFromInput);
+                using (var sha = SHA512.Create())
+                {
+                    var hash       = sha.ComputeHash(toHash);
+                    var hashString = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+
+                    return SecureCompare(password, hashString);
+                }
+            }
+        }
+
         public int        max_connections  = 64;
         public Socket     listen_socket    = null;
         public IPAddress  listen_ip        = default;
@@ -23,7 +58,7 @@ namespace vinnysocks5proxy
 
         public ForwardingInfo forwarding = null;
 
-        public SortedList<string, string> users   = new SortedList<string, string>();
+        public SortedList<string, UserPassword> users   = new SortedList<string, UserPassword>();
         public ErrorReporting_SimpleFile  logger  = new ErrorReporting_SimpleFile();
 
         public bool namesGranted_ipv4   = false;

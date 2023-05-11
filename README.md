@@ -7,7 +7,7 @@ https://translate.yandex.ru/?lang=ru-en
 
 Socks5 and http proxy for host in home usage.
 
-Need [Mono](https://www.mono-project.com/) in Linux and [.NET Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework) in Windows or [.NET 7.0](https://dotnet.microsoft.com/download)
+Need [.NET 7.0](https://dotnet.microsoft.com/download) for all .NET OS supported (Linux/Windows)
 
 Completed functionality:
 * Can listen on multiple ports
@@ -27,12 +27,18 @@ Example of configuration
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/trusts/example3.trusts (and files near)
 
 
+build
+cd net7.0
+bash -i build.sh
+
+An executable binary file in net7.0/build/arc/vinny-socks5-proxy/
+
 ---------------
 Русский
 
 Socks5 и http прокси для домашнего использования на своей машине.
 
-Требует [Mono](https://www.mono-project.com/) на Linux и [.NET Framework 4.8](https://dotnet.microsoft.com/en-us/download/dotnet-framework) на Windows или [.NET 7.0](https://dotnet.microsoft.com/download) для любых поддерживаемых .NET систем
+[.NET 7.0](https://dotnet.microsoft.com/download) для любых поддерживаемых .NET систем (Linux/Windows)
 
 Законченная функциональность
 * Может прослушивать несколько портов
@@ -50,3 +56,10 @@ Socks5 и http прокси для домашнего использования
 Пример конфигурации
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/vinny-socks5-proxy/vinny-socks5-proxy.conf.txt
 * https://github.com/fdsc/vinny-socks5-proxy/blob/main/trusts/example3.trusts (и файлы рядом)
+
+
+build
+cd net7.0
+bash -i build.sh
+
+Запускаемый файл в каталоге net7.0/build/arc/vinny-socks5-proxy/

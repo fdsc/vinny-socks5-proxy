@@ -143,7 +143,7 @@ namespace vinnysocks5proxy
                         if (key < 0)
                         goto Forbidden;
                         
-                        if (!SecureCompare(listen.users.Values[key], UserPassword[1]))
+                        if (!listen.users[UserPassword[0]].isWellPassword(UserPassword[1]))
                             goto Forbidden;
                     }
                     
@@ -273,7 +273,7 @@ namespace vinnysocks5proxy
                         if (key < 0)
                             goto Forbidden;
 
-                        if (!SecureCompare(listen.users.Values[key], UserPassword[1]))
+                        if (!listen.users[UserPassword[0]].isWellPassword(UserPassword[1]))
                             goto Forbidden;
                     }
 

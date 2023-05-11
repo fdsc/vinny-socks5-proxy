@@ -141,7 +141,26 @@ namespace vinnysocks5proxy
                             return false;
                         }
 
-                        current.users.Add(curUser, pVal.Trim());
+                        current.users.Add(curUser, new ListenConfiguration.UserPassword(pVal.Trim()));
+                        curUser = null;
+
+                        break;
+
+                    case "pwdh":
+                    case "passh":
+                    case "passwdh":
+                    case "passwordh":
+                        if (!CheckCurrentAndPrintError(current, confFilePath))
+                            return false;
+
+                        if (curUser == null)
+                        {
+                            Console.Error.WriteLine("error in conf file " + confFilePath);
+                            Console.Error.WriteLine("user must be specified before passwordh record: " + line);
+                            return false;
+                        }
+
+                        current.users.Add(curUser, new ListenConfiguration.UserPassword(pVal.Trim(), true));
                         curUser = null;
 
                         break;
