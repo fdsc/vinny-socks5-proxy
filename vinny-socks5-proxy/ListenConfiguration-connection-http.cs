@@ -479,7 +479,7 @@ namespace vinnysocks5proxy
                             connectionTo = null;
 
                             // Немного ждём, чтобы удалить старое соединение
-                            Thread.Sleep(0);
+                            Thread.Sleep(100);
 
                             goto start;
                         }
