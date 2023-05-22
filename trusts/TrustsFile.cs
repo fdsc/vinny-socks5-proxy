@@ -78,7 +78,7 @@ namespace trusts
 
             return false;
         }
-
+// TODO: Добавить здесь ThreadPool, чтобы была меньше вероятность отваливания
         /// <summary>Обработчик изменений отслеживаемого файла настроек</summary><param name="sender"></param><param name="e"></param>
         protected void TrustsFileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
