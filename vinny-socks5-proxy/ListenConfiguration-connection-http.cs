@@ -205,7 +205,7 @@ namespace vinnysocks5proxy
                 // Т.к. каждое соединение тут для разных целевых серверов, то всю информацию заново перезагружаем
                 connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
                 try
-                {
+                {// TODO: Убрано, т.к., похоже, когда бывает переход на метку start, нормально, что connection.Available > 0
                     if (connection.Available > 0)
                     {
                         LogForConnection("doHttpWithoutConnect: error: connection.Available > 0 for\r\n" + HttpHello, connection, 0);

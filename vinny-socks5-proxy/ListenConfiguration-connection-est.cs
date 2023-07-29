@@ -489,12 +489,20 @@ namespace vinnysocks5proxy
 
             public static int ReceiveBytes(Socket connection, byte[] b)
             {
+                // На всякий случай делаем задержку, вдруг что-то ещё придёт
+                if (connection.Available == 0)
+                    Thread.Sleep(121);
+
                 var offset = 0;
                 var received = 0;
                 do
                 {
                     received = connection.Receive(b, offset, b.Length - offset, SocketFlags.None);
                     offset += received;
+
+                    // На всякий случай делаем задержку, вдруг что-то ещё придёт
+                    if (connection.Available == 0 && received > 0)
+                        Thread.Sleep(56);
                 }
                 while (connection.Available > 0 && received > 0);
 
