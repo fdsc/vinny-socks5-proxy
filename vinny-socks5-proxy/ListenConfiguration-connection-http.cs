@@ -83,7 +83,7 @@ namespace vinnysocks5proxy
                         if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.MaxSpeedTo))
                         {
                             LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
-                            SendHttpResponse("403 Forbidden", connection);
+                            SendHttpResponse("403 Forbidden by proxy", connection);
                             return false;
                         }
                         
@@ -205,10 +205,10 @@ namespace vinnysocks5proxy
                 // Т.к. каждое соединение тут для разных целевых серверов, то всю информацию заново перезагружаем
                 connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
                 try
-                {// TODO: Убрано, т.к., похоже, когда бывает переход на метку start, нормально, что connection.Available > 0
+                {
                     if (connection.Available > 0)
                     {
-                        LogForConnection("doHttpWithoutConnect: error: connection.Available > 0 for\r\n" + HttpHello, connection, 0);
+                        LogForConnection($"doHttpWithoutConnect: error: connection.Available > 0 ({connection.Available}) for\r\n" + HttpHello, connection, 0);
                         SendHttpResponse("500 Internal Server Error", connection);
                         return false;
                     }
@@ -346,7 +346,7 @@ namespace vinnysocks5proxy
                         if (!listen.trusts_domain.Compliance(domain, ref fw, ref listen.MaxSpeedTo))
                         {
                             LogForConnection($"Domain '{domain}' is denied\r\n{HttpHello}", connection, 1);
-                            SendHttpResponse("403 Forbidden", connection);
+                            SendHttpResponse("403 Forbidden by proxy", connection);
                             return false;
                         }
                         

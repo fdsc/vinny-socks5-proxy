@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 using static trusts.TrustsObject;
 
 namespace trusts
@@ -78,28 +79,34 @@ namespace trusts
 
             return false;
         }
-// TODO: Добавить здесь ThreadPool, чтобы была меньше вероятность отваливания
+
         /// <summary>Обработчик изменений отслеживаемого файла настроек</summary><param name="sender"></param><param name="e"></param>
         protected void TrustsFileWatcher_Changed(object sender, FileSystemEventArgs e)
         {
-            if (isFromFile)
-            lock (this)
-            {
-                trustsFile.Refresh();
-                if (LastWriteTimeToTrustsFile == trustsFile.LastWriteTimeUtc)
-                    return;
-
-                SetLastTimeTrustsWrite();
-                logger.Log("Trust file changed " + trustsFile.LastWriteTime, trustsFile.FullName, ErrorReporting.LogTypeCode.Usually, "trustsFile");
-                var newRoot = Parse(File.ReadAllLines(this.trustsFile.FullName, new UTF8Encoding()));
-                if (newRoot == null)
+            ThreadPool.QueueUserWorkItem
+            (
+                (arg) =>
                 {
-                    logger.Log($"Trusts file is incorrect: {this.trustsFile.FullName}\r\nServer still work with previous trusts configuration", "", ErrorReporting.LogTypeCode.FatalError, "trustsFile");
-                    return;
+                    if (isFromFile)
+                    lock (this)
+                    {
+                        trustsFile.Refresh();
+                        if (LastWriteTimeToTrustsFile == trustsFile.LastWriteTimeUtc)
+                            return;
+
+                        SetLastTimeTrustsWrite();
+                        logger.Log("Trust file changed " + trustsFile.LastWriteTime, trustsFile.FullName, ErrorReporting.LogTypeCode.Usually, "trustsFile");
+                        var newRoot = Parse(File.ReadAllLines(this.trustsFile.FullName, new UTF8Encoding()));
+                        if (newRoot == null)
+                        {
+                            logger.Log($"Trusts file is incorrect: {this.trustsFile.FullName}\r\nServer still work with previous trusts configuration", "", ErrorReporting.LogTypeCode.FatalError, "trustsFile");
+                            return;
+                        }
+                        else
+                            SetNewRoot(newRoot);
+                    }
                 }
-                else
-                    SetNewRoot(newRoot);
-            }
+            );
         }
 
         private void SetLastTimeTrustsWrite()

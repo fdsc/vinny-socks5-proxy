@@ -52,8 +52,12 @@ cp -f ./build/vinny-socks5-proxy/bin/Release/net7.0/linux-x64/publish/vinny-sock
 #cp -f ./build/vinny-socks5-proxy/bin/Release/net7.0/publish/*.txt ./build/arc/vinny-socks5-proxy &&
 #cp -f ./build/vinny-socks5-proxy/bin/Release/net7.0/publish/*.conf* ./build/arc/vinny-socks5-proxy &&
 #cp -f ./build/vinny-socks5-proxy/bin/Release/net7.0/publish/*.json ./build/arc/vinny-socks5-proxy &&
+cp -f ../trusts/*.trusts ./build/arc/vinny-socks5-proxy &&
+cp -f ../vinny-socks5-proxy/*.conf ./build/arc/vinny-socks5-proxy &&
+cp -f ../vinny-socks5-proxy/*.txt ./build/arc/vinny-socks5-proxy &&
 
-7z a -y -t7z -stl -m0=lzma -mx=9 -ms=on -bb0 -bd -ssc -ssw ../build/vinny-socks5-proxy-net70.7z ./build/arc/vinny-socks5-proxy
+
+7z a -y -t7z -stl -m0=lzma -mx=9 -ms=on -bb0 -bd -ssc -ssw ../build/vinny-socks5-proxy-net70.7z ./build/arc/
 
 
 
