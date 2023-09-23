@@ -206,12 +206,14 @@ namespace vinnysocks5proxy
                 connectToSocks = $"{connection.LocalEndPoint.ToString()} <- {connection.RemoteEndPoint.ToString()}";
                 try
                 {
+                // Это будет выдавать ошибку, если включён HTTP pipelining
+                /*
                     if (connection.Available > 0)
                     {
                         LogForConnection($"doHttpWithoutConnect: error: connection.Available > 0 ({connection.Available}) for\r\n" + HttpHello, connection, 0);
                         SendHttpResponse("500 Internal Server Error", connection);
                         return false;
-                    }
+                    }*/
 
                     // Принимаем на вход GET или другой запрос, например, GET / HTTP/1.1
                     // Разделяем на заголовки
@@ -467,6 +469,7 @@ namespace vinnysocks5proxy
                     // Почему-то без этого браузер не работает: закрытие соединения он не понимает верно
                     try
                     {
+                        // Здесь может быть ошибка при http pipeline, т.к. запрос принимается только один, а клиент реально может передать сразу несколько
                         received  = ReceiveBytes(connection, b);
                         b_length  = received;
                         HttpHello = asciiEncoding.GetString(b, 0, received);
